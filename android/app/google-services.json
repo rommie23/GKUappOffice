@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "869690772865",
+    "project_id": "gkuapp-e6f24",
+    "storage_bucket": "gkuapp-e6f24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869690772865:android:e7d3fffcbbe21d58c3ec80",
+        "android_client_info": {
+          "package_name": "com.GKUapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAc3_m9oqkKvbm7zXXCPomQywgmL3u5xog"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -93,8 +93,8 @@ android {
         applicationId "com.GKUapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 69
-        versionName "1.69"
+        versionCode 72
+        versionName "1.72"
     }
     signingConfigs {
         release {

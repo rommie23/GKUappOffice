@@ -96,7 +96,7 @@ const EachLeaveForward = ({ route }) => {
     }, [])
 
     const notificationfunction = async (recipient, notifiId) => {
-        console.log("notificationfunction called");
+        // console.log("notificationfunction called");
 
         const session = await EncryptedStorage.getItem("user_session");
         if (!session) return;
@@ -119,7 +119,7 @@ const EachLeaveForward = ({ route }) => {
                 signal: controller.signal,
             });
             clearTimeout(timeout);
-            submitModel(ALERT_TYPE.SUCCESS, "Success", "Updated Successfully");
+            // submitModel(ALERT_TYPE.SUCCESS, "Success", "Updated Successfully");
         } catch (error) {
             console.log("Notification error:", error.message);
             // submitModel(ALERT_TYPE.SUCCESS, "Success", "Updated Successfully, but notification not sent");
@@ -154,18 +154,18 @@ const EachLeaveForward = ({ route }) => {
                 console.log("recommendOrSanctionLeave:::", response);
                 const notificationTasks = []
                 if (buttonType == 3) {
-                    // notificationfunction(recepient, 7)
+                    notificationfunction(recepient, 7)
                 } else if (buttonType == 1) {
                     console.log(recepient['AuthorityId']);
                     console.log(recepient['StaffId']);
 
-                    // notificationfunction(recepient['Authority'], 8)
-                    // notificationfunction(recepient['StaffId'], 9)
+                    notificationfunction(recepient['Authority'], 8)
+                    notificationfunction(recepient['StaffId'], 9)
                 } else if (buttonType == 2) {
-                    // notificationfunction(recepient, 10)
-                    // notificationfunction([VCId], 8)
+                    notificationfunction(recepient, 10)
+                    notificationfunction([VCId], 8)
                 } else {
-                    // notificationfunction(recepient, 11)
+                    notificationfunction(recepient, 11)
                 }
                 await Promise.allSettled(notificationTasks)
                 submitModel(ALERT_TYPE.SUCCESS, "Success", 'Updated Successfully')

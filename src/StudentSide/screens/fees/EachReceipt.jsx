@@ -1,3 +1,6 @@
+// NOT IN USE CURRENTLY
+
+
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Pdf from 'react-native-pdf'

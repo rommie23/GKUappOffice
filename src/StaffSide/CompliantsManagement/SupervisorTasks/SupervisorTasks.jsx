@@ -27,7 +27,7 @@ const FifthRoute = ()=>(
 const renderScene = SceneMap({
   Pending: SecondRoute,
   Assigned: FifthRoute,
-  ongoing: FourthRoute,
+  Ongoing: FourthRoute,
   Completed: ThirdRoute,
 });
 
@@ -37,7 +37,7 @@ export default function SupervisorTasks() {
   const [routes] = useState([
     { key: 'Pending', title: 'Pending' },
     { key: 'Assigned', title: 'Assigned' },
-    { key: 'ongoing', title: 'ongoing' },
+    { key: 'Ongoing', title: 'Ongoing' },
     { key: 'Completed', title: 'Completed' },
   ]);
 

@@ -26,7 +26,7 @@ const ApplyBusPass = () => {
     const [applyResponse, setApplyResponse] = useState('')
     const navigation = useNavigation()
     const [applyModal, setApplyModal] = useState(false)
-    const [dropdownOpen, setDropdownOpen] = useState(false);    
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const oldBusPass = async () => {
         setLoading1(true)
@@ -297,7 +297,7 @@ const ApplyBusPass = () => {
                                 </View>
 
                                 <Text style={[styles.label, { marginTop: 16 }]}>Select Pickup Spot</Text>
-                                <View onLayout={handleLayout2}>
+                                <View>
                                 <SelectList boxStyles={{ padding: 10, width: "100%" }}
                                     setSelected={(val) => setSelectedSpot(val)}
                                     fontFamily='time'
@@ -328,7 +328,7 @@ const ApplyBusPass = () => {
                         {loading1 ? <ActivityIndicator /> :
                             <View style={styles.outerContainer}>
                                 {
-                                    passData["rowsAffected"] > 0 ?
+                                    passData?.["rowsAffected"] > 0 ?
                                         passData['recordset'].map((item, i) => (
                                             <View style={styles.card} key={i}>
                                                 <View style={styles.topCard}>

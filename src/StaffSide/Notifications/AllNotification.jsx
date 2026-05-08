@@ -30,7 +30,7 @@ const AllNotification = () => {
           }
         })
         const totalnoticesData = await notices.json()
-        console.log('total sem data ::', totalnoticesData);
+        // console.log('total sem data ::', totalnoticesData);
         if (totalnoticesData.length < 1) {
           errorModel(ALERT_TYPE.WARNING, "No Notice", "There are no notices to show");
         }

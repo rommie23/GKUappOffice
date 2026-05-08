@@ -1,10 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, View, Text, StyleSheet } from "react-native";
 
-export default function BirthdayCard({ name }) {
+
+// type
+// 1 = Birthday
+// 2 = WorkAniversary
+export default function BirthdayCard({ name, type, years }) {
   const fade = useRef(new Animated.Value(0)).current;
   const translate = useRef(new Animated.Value(-40)).current;
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(1)).current; 
 
   useEffect(() => {
     Animated.parallel([
@@ -43,19 +47,19 @@ export default function BirthdayCard({ name }) {
         {
           opacity: fade,
           transform: [{ translateY: translate }, { scale }],
+          backgroundColor: type == 1 ? "#FFE8A3" : type == 2 ? "#a3ffd1" : "#FFE8A3"
         },
       ]}
     >
-      <Text style={styles.title}>🎂 Happy Birthday!</Text>
-      <Text style={styles.message}>Wishing you a wonderful year ahead.</Text>
-      <Text style={styles.name}>{name}</Text>
+      <Text style={styles.title}>{type == 1 ? '🎂 Happy Birthday!' : type == 2 ? '💐 Happy Work Anniversarry 💐' : ""}</Text>
+      <Text style={styles.message}>{type == 1 ? `Wishing you a wonderful year ahead.` : type == 2 ? `Cheers to ${years} years of amazing work and dedication!`: ""}</Text>
+      {/* <Text style={styles.name}>{name}</Text> */}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFE8A3",
     margin: 15,
     padding: 18,
     borderRadius: 12,
@@ -69,6 +73,7 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 5,
     fontSize: 14,
+    textAlign:'center'
   },
   name: {
     marginTop: 4,

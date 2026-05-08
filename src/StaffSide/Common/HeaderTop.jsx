@@ -12,15 +12,53 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
 import { IMAGE_URL, BASE_URL } from '@env';
 import { getFocusedRouteNameFromRoute, useFocusEffect } from '@react-navigation/native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 
 const screenWidth = Dimensions.get('window').width;
 
 const HeaderTop = ({ navigation }) => {
-  const { StaffIDNo, setStaffIDNo, setIsLoggedin, setUserType, staffImage, imageStatus, mobileToken } = useContext(StudentContext)
+  const { StaffIDNo, setStaffIDNo, setIsLoggedin, setUserType, staffImage, imageStatus, mobileToken, data } = useContext(StudentContext)
+  // console.log(data.data);
+  
   const [pendingNotification, setPendingNotifications] = useState('')
   const [menuVisible, setMenuVisible] = useState(false);
   const ImageUrl = `${IMAGE_URL}Images/Staff/`;
   const Drawer = createDrawerNavigator();
+
+
+
+
+  // ///////////////// Animation setup /////////////////
+  const translateX = useSharedValue(-screenWidth * 0.8);
+  const overlayOpacity = useSharedValue(0);
+
+  const openMenu = () => {
+    setMenuVisible(true);
+    translateX.value = withTiming(0, { duration: 300 });
+    overlayOpacity.value = withTiming(1, { duration: 300 });
+  };
+
+  const closeMenu = () => {
+    translateX.value = withTiming(-screenWidth * 0.8, { duration: 250 });
+    overlayOpacity.value = withTiming(0, { duration: 250 });
+
+    setTimeout(() => setMenuVisible(false), 250); // wait for animation
+  };
+
+  const drawerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+
+  ///////////////// Animation Setup end ////////////
 
   let menuOptions;
   if (Platform.OS == 'android') {
@@ -31,104 +69,81 @@ const HeaderTop = ({ navigation }) => {
       { path: 'Calendar', title: 'Attendance' },
       { path: 'ChangePassword', title: 'Change Password' },
     ]
-  }else{
+  } else {
     menuOptions = [
+      { path: 'ApplyLeaveForm', title: 'Apply Leave' },
       { path: 'MovementRequest', title: 'Apply Movement' },
       { path: 'Calendar', title: 'Attendance' },
       { path: 'ChangePassword', title: 'Change Password' },
     ]
   }
 
+  const getMenuIcon = (title) => {
+    switch (title) {
+      case 'Profile':
+        return <FeatherIcon name="user" size={18} color="#333" />;
+      case 'Apply Leave':
+        return <FeatherIcon name="edit" size={18} color="#333" />;
+      case 'Apply Movement':
+        return <FeatherIcon name="map-pin" size={18} color="#333" />;
+      case 'Attendance':
+        return <FeatherIcon name="calendar" size={18} color="#333" />;
+      case 'Change Password':
+        return <FeatherIcon name="lock" size={18} color="#333" />;
+      default:
+        return <FeatherIcon name="circle" size={18} color="#333" />;
+    }
+  };
+
   const menuOptionSelect = (nav) => {
     closeMenu()
     navigation.navigate(nav)
   }
 
-  const closeMenu = () => {
-    setMenuVisible(false);
-  };
-
-  //   const removeSession = async () => {
-  //   const session = await EncryptedStorage.getItem("user_session")
-  //   if (session != null) {
-  //   if (Platform.OS == "android") {
-  //       try {
-  //         const offNotification = await fetch(BASE_URL + '/notifiaction/logoutNotification', {
-  //           method: 'POST',
-  //           headers: {
-  //             Authorization: `Bearer ${session}`,
-  //             "Content-Type" : 'application/json'
-  //           },
-  //           body: JSON.stringify({
-  //             deviceToken : mobileToken
-  //           })
-  //         })
-  //         const response = await offNotification.json()
-  //         // console.log("response::",response);
-          
-  //         if (response.flag == 1) {
-  //           console.log('logout success');
-  //           await EncryptedStorage.removeItem('user_session')
-  //           setIsLoggedin(false)
-  //         } else {
-  //           console.log("Logout Failed");
-  //           submitModel(ALERT_TYPE.DANGER,"Network Error", `${response['message']}`)
-  //         }
-  //       } catch (error) {
-  //         submitModel(ALERT_TYPE.DANGER,"Oops!!!", `Something went wrong.`)
-  //         console.log(error);
-  //       }
-  //       }else{
-  //         await EncryptedStorage.removeItem('user_session')
-  //         setIsLoggedin(false)
-  //       }
-  //   }
-  // }
-
   const removeSession = async () => {
-      const session = await EncryptedStorage.getItem("user_session");
-      if (!session) return;
-  
-      try {
-        if (mobileToken) {
-          const offNotification = await fetch(
-            `${BASE_URL}/notifiaction/logoutNotification`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${session}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                deviceToken: mobileToken,
-              }),
-            }
-          );
-  
-          const response = await offNotification.json();
-  
-          if (response.flag !== 1) {
-            submitModel(
-              ALERT_TYPE.DANGER,
-              "Network Error",
-              response.message
-            );
-            return;
+    const session = await EncryptedStorage.getItem("user_session");
+    if (!session) return;
+
+    try {
+      if (mobileToken) {
+        const offNotification = await fetch(
+          `${BASE_URL}/notifiaction/logoutNotification`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              deviceToken: mobileToken,
+            }),
           }
-        } else {
-          console.log("No device token (iOS simulator / permission denied)");
+        );
+
+        const response = await offNotification.json();
+
+        if (response.flag !== 1) {
+          submitModel(
+            ALERT_TYPE.DANGER,
+            "Network Error",
+            response.message
+          );
+          return;
         }
-  
-        // ✅ ALWAYS logout locally
-        await EncryptedStorage.removeItem('user_session');
-        setIsLoggedin(false);
-        setUserType('');
-  
-      } catch (error) {
-        console.log(error);
-        submitModel(ALERT_TYPE.DANGER, "Oops!!!", "Something went wrong.");
+      } else {
+        console.log("No device token (iOS simulator / permission denied)");
       }
-    };
+
+      // ✅ ALWAYS logout locally
+      await EncryptedStorage.removeItem('user_session');
+      setIsLoggedin(false);
+      setUserType('');
+
+    } catch (error) {
+      console.log(error);
+      submitModel(ALERT_TYPE.DANGER, "Oops!!!", "Something went wrong.");
+    }
+  };
 
 
 
@@ -184,9 +199,9 @@ const HeaderTop = ({ navigation }) => {
         <Drawer.Navigator
           screenOptions={{
             headerShown: true,
+            swipeEnabled: false,
             headerLeft: () => (
               <TouchableOpacity>
-                {/* <PaperProvider> */}
                 <View
                   style={
                     Platform.OS === 'android' && {
@@ -194,30 +209,10 @@ const HeaderTop = ({ navigation }) => {
                       justifyContent: 'center',
                     }
                   }>
-                  <Button onPress={() => setMenuVisible(!menuVisible)}><FeatherIcon name={menuVisible ? 'x' : 'menu'} size={24} color="black" /></Button>
-                  {/* <Menu
-                    contentStyle={{ backgroundColor: 'white' }}
-                    style={{ width: screenWidth / 2 }}
-                    visible={menuVisible}
-                    onDismiss={closeMenu}
-                    anchor={
-                    <Button onPress={() => setMenuVisible(!menuVisible)}><FeatherIcon name={menuVisible ? 'x' : 'menu'} size={24} color="black" /></Button>
-                    }> */}
-                  {/* <Menu.Item onPress={() => menuOptionSelect('StaffProfile')} titleStyle={{ color: "black" }} title="Profile" />
-                    <Divider />
-                    {/* <Menu.Item onPress={() => menuOptionSelect('ApplyLeaveForm')} titleStyle={{color:"black"}} title="Apply Leave" />
-                <Divider /> */}
-                  {/* <Divider />
-                    <Menu.Item onPress={() => menuOptionSelect('MovementRequest')} titleStyle={{ color: "black" }} title="Apply Movement" />
-                    <Divider />
-                    <Menu.Item onPress={() => menuOptionSelect('Calendar')} titleStyle={{ color: "black" }} title="Attendance" /> */}
-                  {/* <Divider />
-                    <Menu.Item onPress={() => menuOptionSelect('ChangePassword')} titleStyle={{ color: "black" }} title="Change Password" />
-                    <Divider /> */}
-                  {/* <Menu.Item onPress={() => removeSession()} title="Logout" titleStyle={{ color: 'red', fontWeight: '600' }} />  */}
-                  {/* </Menu> */}
+                  <Button onPress={openMenu}>
+                    <FeatherIcon name="menu" size={24} />
+                  </Button>
                 </View>
-                {/* </PaperProvider> */}
               </TouchableOpacity>
             ),
             headerRight: () => (
@@ -264,52 +259,122 @@ const HeaderTop = ({ navigation }) => {
           } />
 
         </Drawer.Navigator>
-        {/* ✅ Overlay to detect outside press */}
+        {/* Overlay to detect outside press */}
         {menuVisible && (
-          <Modal transparent animationType="fade" visible={menuVisible}>
-            <Pressable
-              style={{
-                flex: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0)',
-              }}
-              onPress={closeMenu}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                top: Platform.OS == 'ios' ? 100 : 50,
-                left: 10,
-                backgroundColor: 'white',
-                borderRadius: 4,
-                elevation: 5,
-                width: screenWidth / 2,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 4,
-              }}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+            }}
+          >
+
+            {/* 🔥 Overlay */}
+            <Animated.View
+              style={[
+                {
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                },
+                overlayStyle,
+              ]}
             >
+              <Pressable style={{ flex: 1 }} onPress={closeMenu} />
+            </Animated.View>
+
+            {/* 🔥 Sliding Drawer */}
+            <Animated.View
+              style={[
+                {
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  width: screenWidth * 0.75,
+                  backgroundColor: '#fff',
+                  borderTopRightRadius: 20,
+                  borderBottomRightRadius: 20,
+                  paddingTop: Platform.OS === 'ios' ? 60 : 40,
+                  paddingHorizontal: 16,
+                  elevation: 10,
+                },
+                drawerStyle,
+              ]}
+            >
+
+              {/* Header */}
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, fontWeight: '600' }}>
+                  {data.data[0]['Name']} ({StaffIDNo})
+                </Text>
+                <Text style={{ fontSize: 14, color: '#666' }}>
+                  {data.data[0]['CollegeName']}
+                </Text>
+              </View>
+
+              {/* Menu */}
               {menuOptions.map((item, i) => (
                 <TouchableOpacity
                   key={i}
-                  onPress={() => menuOptionSelect(item.path)}
-                  style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderColor: '#C4C4C4', paddingLeft: 12 }}
+                  onPress={() => {
+                    closeMenu();
+                    setTimeout(() => menuOptionSelect(item.path), 200);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 14,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    marginBottom: 6,
+                  }}
                 >
-                  <Text style={{ color: '	#3b444b', fontSize: 16 }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      backgroundColor: '#f1f5f9',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginRight: 12,
+                    }}
+                  >
+                    {getMenuIcon(item.title)}
+                  </View>
+
+                  <Text style={{ fontSize: 15, fontWeight: '500' }}>
                     {item.title}
                   </Text>
                 </TouchableOpacity>
               ))}
+
+              {/* Logout */}
               <TouchableOpacity
-                onPress={() => removeSession()}
-                style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderColor: '#C4C4C4', paddingLeft: 12 }}
+                onPress={removeSession}
+                style={{
+                  marginTop: 20,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 12,
+                  borderRadius: 12,
+                  backgroundColor: '#fff1f2',
+                }}
               >
-                <Text style={{ color: 'red', fontSize: 16 }}>
+                <FeatherIcon name="log-out" size={18} color="#ef4444" />
+                <Text style={{ marginLeft: 10, color: '#ef4444', fontWeight: '600' }}>
                   Logout
                 </Text>
               </TouchableOpacity>
-            </View>
-          </Modal>
+
+            </Animated.View>
+          </View>
         )}
       </View>
     </AlertNotificationRoot>

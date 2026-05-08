@@ -88,8 +88,6 @@ const Leaves = () => {
   }
 
   const profileAlert = async () => {
-    console.log("kjhdh");
-
     errorModel(ALERT_TYPE.WARNING, "Profile Image Error", `Kindly update your profile Image to Apply Leave`)
   }
 
@@ -106,13 +104,75 @@ const Leaves = () => {
   const navigation = useNavigation()
   return (
     <AlertNotificationRoot>
-      <Pressable onPress={closeMenu}>
-        <View>
+        <View style={{backgroundColor:"#fff", flex:1}}>
           <ScrollView>
             {
               loading ? <ActivityIndicator /> :
                 <View style={{ minHeight: screenHeight / 1.3 }}>
                   <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, columnGap: screenWidth / 30, paddingHorizontal: 24, justifyContent: 'flex-start', rowGap: 16, paddingBottom: 4 }}>
+                  {/* Apply leave */}
+                    {
+                      tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'ApplyLeave' &&
+                      <View>
+                        {imageStatus == 2 ?
+                          <TouchableOpacity style={styles.cards} onPress={() => { profileAlert() }}>
+                            <View style={styles.cardCont}>
+                              <View style={styles.iconOuter}>
+                                <MaskedView
+                                  style={{ flexDirection: 'row', height: 24, width: 24 }}
+                                  maskElement={
+                                    <View
+                                      style={{
+                                        backgroundColor: 'transparent',
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}
+                                    >
+                                      <FontAwesome6 name='user-plus' color={colors.uniBlue} size={18} />
+                                    </View>
+                                  }
+                                >
+                                  <LinearGradient
+                                    colors={[colors.uniRed, colors.uniBlue]}
+                                    style={{ flex: 1 }}
+                                  />
+                                </MaskedView>
+                              </View>
+                              <Text style={styles.cardText} >Apply Leave</Text>
+                            </View>
+                          </TouchableOpacity>
+                          :
+                          <TouchableOpacity style={styles.cards} onPress={() => { closeMenu(); navigation.navigate('ApplyLeaveForm') }}>
+                            <View style={styles.cardCont}>
+                              <View style={styles.iconOuter}>
+                                <MaskedView
+                                  style={{ flexDirection: 'row', height: 24, width: 24 }}
+                                  maskElement={
+                                    <View
+                                      style={{
+                                        backgroundColor: 'transparent',
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}
+                                    >
+                                      <FontAwesome6 name='user-plus' color={colors.uniBlue} size={18} />
+                                    </View>
+                                  }
+                                >
+                                  <LinearGradient
+                                    colors={[colors.uniRed, colors.uniBlue]}
+                                    style={{ flex: 1 }}
+                                  />
+                                </MaskedView>
+                              </View>
+                              <Text style={styles.cardText} >Apply Leave</Text>
+                            </View>
+                          </TouchableOpacity>
+                        }
+                      </View>
+                    }
                     {
                       tabsData?.[0]?.['IsVisible'] == 1 && tabsData?.[0]?.ElementName === 'MyLeaves' &&
                       <TouchableOpacity style={styles.cards} onPress={() => { closeMenu(); navigation.navigate('MyLeaves') }}>
@@ -177,78 +237,12 @@ const Leaves = () => {
                             </TouchableOpacity> : null
                     }
 
-
-                    {/* Apply leave */}
-                    {
-                      tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'ApplyLeave' &&
-                      <View>
-                        {imageStatus == 2 ?
-                          <TouchableOpacity style={styles.cards} onPress={() => { profileAlert() }}>
-                            <View style={styles.cardCont}>
-                              <View style={styles.iconOuter}>
-                                <MaskedView
-                                  style={{ flexDirection: 'row', height: 24, width: 24 }}
-                                  maskElement={
-                                    <View
-                                      style={{
-                                        backgroundColor: 'transparent',
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                      }}
-                                    >
-                                      <FontAwesome6 name='user-plus' color={colors.uniBlue} size={18} />
-                                    </View>
-                                  }
-                                >
-                                  <LinearGradient
-                                    colors={[colors.uniRed, colors.uniBlue]}
-                                    style={{ flex: 1 }}
-                                  />
-                                </MaskedView>
-                              </View>
-                              <Text style={styles.cardText} >Apply Leave</Text>
-                            </View>
-                          </TouchableOpacity>
-                          :
-                          <TouchableOpacity style={styles.cards} onPress={() => { closeMenu(); navigation.navigate('ApplyLeaveForm') }}>
-                            <View style={styles.cardCont}>
-                              <View style={styles.iconOuter}>
-                                <MaskedView
-                                  style={{ flexDirection: 'row', height: 24, width: 24 }}
-                                  maskElement={
-                                    <View
-                                      style={{
-                                        backgroundColor: 'transparent',
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                      }}
-                                    >
-                                      <FontAwesome6 name='user-plus' color={colors.uniBlue} size={18} />
-                                    </View>
-                                  }
-                                >
-                                  <LinearGradient
-                                    colors={[colors.uniRed, colors.uniBlue]}
-                                    style={{ flex: 1 }}
-                                  />
-                                </MaskedView>
-                              </View>
-                              <Text style={styles.cardText} >Apply Leave</Text>
-                            </View>
-                          </TouchableOpacity>
-                        }
-                      </View>
-                    }
-
                   </View>
                   {/* <PlusIcon /> */}
                 </View>
             }
           </ScrollView>
         </View>
-      </Pressable>
     </AlertNotificationRoot>
   )
 }
@@ -263,10 +257,15 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     // backgroundColor:'green',
     alignSelf: 'center',
-    elevation: 2,
     backgroundColor: 'white',
     // opacity: disabled? 0.5 :1
-    borderRadius: 8
+    borderRadius: 8,
+    
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
   cardText: {
     fontSize: 12,

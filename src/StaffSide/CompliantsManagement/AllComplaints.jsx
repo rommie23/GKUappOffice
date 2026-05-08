@@ -2,7 +2,7 @@
 
 import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { LIMS_URL } from '@env';
+import { BASE_URL } from '@env';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import colors from '../../colors';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
@@ -22,7 +22,7 @@ const AllComplaints = () => {
     const complains = async () => {
         setLoading(true)
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/myCompliants`, {
+            const response = await axios.post(`${BASE_URL}/complain/myCompliants`, {
                 StaffIDNo
             })
             const complainsData = response.data;
@@ -78,7 +78,7 @@ const AllComplaints = () => {
                                             }]}>
                                                 {
                                                     item['complainStatus'] == 2 ? "Rejected" : 
-                                                    item['complainStatus'] == 1 ? `${item['status']}` : `Pending`
+                                                    item['complainStatus'] == 1 ? `${item['Status']}` : `Pending`
                                                 }
                                             </Text>
                                         </View>
@@ -87,7 +87,7 @@ const AllComplaints = () => {
                                     <View style={styles.transaction}>
                                         <View style={{ width: '50%' }}>
                                             <Text style={[styles.textSmall]}>Complaint Date/Time</Text>
-                                            <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(item['created_at'])}</Text>
+                                            <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(item['CreatedDate'])}</Text>
                                         </View>
                                         <View style={{ width: '30%' }}>
                                             <Text style={[styles.textSmall]}>Category</Text>
@@ -103,27 +103,27 @@ const AllComplaints = () => {
                                     <View style={styles.transaction}>
                                         <View style={{ width: '100%' }}>
                                             <Text style={styles.textSmall}>Title</Text>
-                                            <Text style={[styles.textStyle]}>{item['title']}</Text>
+                                            <Text style={[styles.textStyle]}>{item['Title']}</Text>
                                         </View>
                                     </View>
                                     <View style={styles.transaction}>
                                         <View style={{ width: '100%' }}>
                                             <Text style={styles.textSmall}>Description</Text>
-                                            <Text style={[styles.textStyle]}>{item["description"]}</Text>
+                                            <Text style={[styles.textStyle]}>{item["Description"]}</Text>
                                         </View>
                                     </View>
                                     <View style={[styles.transaction]}>
                                         <View style={{ width: '50%' }}>
                                             <Text style={[styles.textSmall]}>Resolved At</Text>
-                                            <Text style={[styles.textStyle]}>{item["compete_at"] ? convertUTCToIST(item["compete_at"]) : 'Not Resolved Yet'}</Text>
+                                            <Text style={[styles.textStyle]}>{item["CompletionTime"] ? convertUTCToIST(item["CompletionTime"]) : 'Not Resolved Yet'}</Text>
                                         </View>
                                     </View>
-                                    <View style={styles.transaction}>
+                                    {/* <View style={styles.transaction}>
                                         {
                                             item['complainStatus'] == 2 ? 
                                             <Text style={[styles.textStyle, {color:colors.uniRed}]}>Rejected Due to :{item['reject_remarks']}</Text> : null   
                                         }
-                                    </View>
+                                    </View> */}
                                 </View>
                             ))
                             :

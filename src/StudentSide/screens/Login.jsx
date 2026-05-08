@@ -100,8 +100,8 @@ const Login = () => {
                 await EncryptedStorage.setItem(
                     "user_session",
                     result['token']
-
                 )
+                await EncryptedStorage.setItem("user_type", 'Student');
                 // console.log('token is saved in local',result['token'])
             } catch (error) {
                 console.log('storage error loginFile', error);

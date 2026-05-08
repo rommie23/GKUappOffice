@@ -1,4 +1,4 @@
-/////////////////////////// REFFER TSSK SCREEN //////////////////////////////////
+/////////////////////////// REFFER TASK SCREEN //////////////////////////////////
 
 import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useContext, useEffect, useState } from 'react'
@@ -7,11 +7,12 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import colors from '../../colors';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
 import axios from 'axios';
-import {convertUTCToIST} from '../../services/dateUTCToIST'
+import {convertUTCToISTComplaintUse} from '../../services/dateUTCToIST'
 import { useNavigation } from '@react-navigation/native';
 import useConfirm from '../../customhooks/useConfirm';
 import { SelectList } from 'react-native-dropdown-select-list';
 import { StudentContext } from '../../context/StudentContext';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 
 const screenWidth = Dimensions.get("window").width
@@ -32,12 +33,29 @@ const RejectTaskScreen = ({ route }) => {
     const complains = async () => {
         setLoading(true)
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/eachTask`, { taskId })
+            const session = await EncryptedStorage.getItem("user_session");
+            if (!session) return;
+            const response = await axios.post(`${BASE_URL}/complain/eachTask`, { taskId }, {
+                headers:{
+                    Authorization: `Bearer ${session}`,
+                    "Content-Type": "application/json",
+                }
+            })
             const complainsData = response.data;
+            console.log("Reffered task::",complainData);
+            
             setComplainData(complainsData)
             if (complainsData.length > 0) {
-                const refferList = await axios.post(`${LIMS_URL}/complain/refferCategories`, { categoryId: complainsData[0]['CategoryOfWorkId'] })
-                console.log(refferList.data);
+                const refferList = await axios.post(`${BASE_URL}/complain/refferCategories`, { categoryId: complainsData[0]['CategoryOfWorkId'] },
+                    {
+                        headers:{
+                            Authorization: `Bearer ${session}`,
+                            "Content-Type": "application/json",
+                        }
+                    }
+                )
+
+                // console.log(refferList.data);
                 setCategoriesList(refferList.data.map((item) => {
                     return { key: item['ID'], value: item['CategoryName'] }
                 }))
@@ -58,14 +76,22 @@ const RejectTaskScreen = ({ route }) => {
         console.log(taskId, remarks)
         setLoading(true)
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/referTask`, { taskId, refferedCategoryId : selectedCategory, StaffIDNo})
+            const session = await EncryptedStorage.getItem("user_session");
+            if (!session) return;
+            const response = await axios.post(`${BASE_URL}/complain/referTask`, { taskId, refferedCategoryId : selectedCategory},{
+                headers : {
+                    Authorization: `Bearer ${session}`,
+                    "Content-Type": "application/json",
+                }
+            })
             const assignData = response.data;
             console.log(assignData);
-            if (assignData.affectedRows > 0) {
-                newModel(ALERT_TYPE.SUCCESS, "Task Reffered", "Task Rejected Successfully.")
+            if (assignData.flag == 1) {
+                newModel(ALERT_TYPE.SUCCESS, "Complaint Reffered", assignData.message)
             }
         } catch (error) {
             console.log(error);
+            newModel(ALERT_TYPE.SUCCESS, "Reffer Failed", "Complaint Reffer Failed.")
         } finally {
             setLoading(false)
         }
@@ -98,7 +124,7 @@ const RejectTaskScreen = ({ route }) => {
                                 <View style={styles.transaction}>
                                     <View style={{ width: '50%' }}>
                                         <Text style={[styles.textSmall]}>Complaint Date/Time</Text>
-                                        <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(complainData[0]['created_at'])}</Text>
+                                        <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToISTComplaintUse(complainData[0]['CreatedDate'])}</Text>
                                     </View>
                                     <View style={{ width: '30%' }}>
                                         <Text style={[styles.textSmall]}>Category</Text>

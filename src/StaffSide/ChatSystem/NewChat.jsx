@@ -1073,7 +1073,7 @@ const NewChat = ({ route }) => {
                 </View>
 
 
-                {/* ///////////////////// GROUP PEOPLE LIST AND SEND ////////////////////////////////// */}
+                {/* /////////// GROUP PEOPLE LIST AND SEND /////////////////// */}
                 <View>
                     <View>
                         {
@@ -1159,7 +1159,7 @@ const NewChat = ({ route }) => {
                     }
 
 
-                    {/* ///////////////////// SINGLE SELECTED STAFF/STUDENT LIST ////////////////////////////////// */}
+                    {/* ///////// SINGLE SELECTED STAFF/STUDENT LIST /////////// */}
 
                     {selectedUsers.length > 0 && (
                         <>
@@ -1255,7 +1255,7 @@ const NewChat = ({ route }) => {
                             </View>
                         </View>
                     }
-                    {/* /////////////////////// INDIVIDUAL STAFF TREE AND LIST ///////////////////////////// */}
+                    {/* //////////// INDIVIDUAL STAFF TREE AND LIST ////////////////// */}
                     {
                         singleStaffTree &&
                         <View style={{ backgroundColor: 'white', padding: 16, borderRadius: 16, elevation: 1 }}>
@@ -1405,7 +1405,7 @@ const NewChat = ({ route }) => {
                     )}
 
 
-                    {/* ////////////////////// SELECTED PEOPLE LIST AND SEND MESSAGE ////////////////// */}
+                    {/* //////////// SELECTED PEOPLE LIST AND SEND MESSAGE //////////// */}
 
                     {peopleList && peopleList.map((item, i) => {
                         const name = item.Name.trim();

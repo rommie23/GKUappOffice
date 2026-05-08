@@ -85,23 +85,6 @@ const YourComponent = () => {
                   title={`${item['LeaveTypeName']} (${item["DurationTime"] > 0 ? item["DurationTime"] : item["Duration"]})`}
                   subtitle={formatDate(item['SubmitDate'])}
                   left=""
-                  right={(props) => (
-                    <>
-                      <Menu
-                        visible={openMenuIndex === i}
-                        onDismiss={closeMenu}
-                        anchor={<IconButton icon="dots-vertical" onPress={() => openMenu(i)} />}
-                        contentStyle={{ marginTop: -55 }}
-                      >
-                        {/* <Menu.Item onPress={() => {}} title="Option 1" />
-          <Menu.Item onPress={() => {}} title="Option 2" /> */}
-                        <Menu.Item onPress={() => {
-                          setLeaveID(item.LeaveID);
-                          navigation.navigate('ViewLeave', { leaveID: item.LeaveID });
-                        }} title="View" />
-                      </Menu>
-                    </>
-                  )}
                   titleStyle={{ color: '#223260', fontSize: 15, fontWeight: '800' }}
                   subtitleStyle={{ color: 'black', fontSize: 13, fontWeight: '800' }}
                 />

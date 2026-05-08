@@ -10,22 +10,22 @@ const screenWidth = Dimensions.get('window').width
 const screenHeight = Dimensions.get('window').height
 
 import { useNavigation } from '@react-navigation/native';
-const SecondRoute = () => (
-    <OfficeOrder />
-);
+// const SecondRoute = () => (
+//     <OfficeOrder />
+// );
 const ThirdRoute = () => (
     <NoticeBoard />
 );
 
 const renderScene = SceneMap({
-  OfficeOrder: SecondRoute,
+  // OfficeOrder: SecondRoute,
   NoticeBoard: ThirdRoute,
 });
 
 export default function MyLeaves() {
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: 'OfficeOrder', title: 'Office Order' },
+    // { key: 'OfficeOrder', title: 'Office Order' },
     { key: 'NoticeBoard', title: 'Notice Board' },
   ]);
 

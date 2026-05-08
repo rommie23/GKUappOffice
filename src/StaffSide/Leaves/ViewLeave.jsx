@@ -1,11 +1,12 @@
 import {useContext, useState, useCallback, useEffect} from 'react';
-import { RefreshControl, Dimensions, ScrollView, StyleSheet, Text, View, Image, Pressable } from 'react-native';
+import { RefreshControl, Dimensions, ScrollView, StyleSheet, Text, View, Image, Pressable, TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BASE_URL, IMAGE_URL } from '@env';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { StudentContext } from '../../context/StudentContext';
+import colors from '../../colors';
 
 const screenWidth = Dimensions.get('window').width
 const screenHeight = Dimensions.get('window').height
@@ -16,13 +17,13 @@ const ViewLeave = () => {
   const { staffImage } = useContext(StudentContext);
   const [refreshing, setRefreshing] = useState(false);
   const [getScheduleTime, setScheduleTime] = useState(false);
-  const [getLeaveID, setLeaveID] = useState(null);
   const [getLeaveDataModal, setLeaveDataInModal] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [getLeaveDurationCount, setLeaveDurationCount] = useState(false);
-  const [getStatusTextColor, setStatusTextColor] = useState(null);
+  const [leaveType, setLeaveType] = useState('')
   const route = useRoute();
   const leaveID = route.params.leaveID;
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     getLeaveDataInPage();
@@ -30,9 +31,11 @@ const ViewLeave = () => {
       setRefreshing(false);
     }, 1000);
   }, []);
+
   useEffect(() => {
     getLeaveDataInPage();
   }, [])
+
   const getLeaveDataInPage = async () => {
     const session = await EncryptedStorage.getItem("user_session");
     try {
@@ -48,7 +51,8 @@ const ViewLeave = () => {
         }),
       });
       const staffPendingForModalDetails = await PendingDetailsForModal.json();
-      console.log(staffPendingForModalDetails['data1'][0]['FilePath']);
+      // console.log(staffPendingForModalDetails['data1'][0]['LeaveTypeId']);
+      setLeaveType(staffPendingForModalDetails['data1'][0]['LeaveTypeId'])
       
       setLeaveDataInModal(staffPendingForModalDetails.data1);
       if(staffPendingForModalDetails['data1'][0]['DurationTime']!=0)
@@ -77,56 +81,6 @@ const ViewLeave = () => {
         }
       };
       console.log("IMAGE:::::::::::",IMAGE_URL+staffImage);
-
-// console.log(getLeaveDataModal[0]['Status'])
-  
-// if(getLeaveDataModal[0]['Status']=='Pending to Sanction' && )
-//   {
-//     setStatusTextColor('yellow')
-//   }
-//   else if(getLeaveDataModal[0]['Status']=='Reject')
-//     {
-//       setStatusTextColor('red')
-//     }
-//     else if(getLeaveDataModal[0]['Status']=='Approved')
-//     {
-//       setStatusTextColor('green')
-//     }
-//     else{
-      
-//       setStatusTextColor('black')
-//     }
-// )
-
-
-
-
-
-  // const getEmployeeDetails = async (empid) => {
-  //   const session = await EncryptedStorage.getItem("user_session");
-  //   try {
-  //     setIsLoading(true);
-  //     const getEmployeeDetailsResponse = await fetch(`${BASE_URL}/staff/leaves/${empid}`, {
-  //       method: 'POST',
-  //       headers: {
-  //         Authorization: `Bearer ${session}`,
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify({
-  //         eid: empid
-  //       }),
-  //     });
-  //     const employeeDetails = await getEmployeeDetailsResponse.json();
-  //     // console.log()
-  //     // setStaffName(employeeDetails);
-  //     setIsLoading(false);
-  //   } catch (error) {
-  //     setIsLoading(false);
-  //     console.error('Error fetching data for leave ID', ':', error);
-  //   }
-  // };
-
-// return getEmployeeDetails('131053');
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -319,6 +273,30 @@ const ViewLeave = () => {
                     <View style={styles.rowSpacer} />
                   </Pressable>
                 </View>
+                {
+                  leaveType == 8 && 
+                    <View style={styles.rowWrapper}>
+                      <Pressable
+                        style={styles.row}>
+                        <View
+                          style={[styles.rowIcon, { backgroundColor: '#223260' }]}>
+                          <MaterialCommunityIcons
+                            color="#fff"
+                            name="chevron-double-right"
+                            size={10} />
+                        </View>
+                        <View style={{flexDirection:'row', alignItems:'center'}}>
+                        <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Add Approval File : </Text></Text>
+                        <TouchableOpacity style={{backgroundColor:colors.uniBlue, paddingHorizontal:8, paddingVertical:4}}
+                        onPress={()=>navigation.navigate('SubmitReportScreen')}>
+                          <Text style={{color:'white', fontWeight:'600'}}>Click to Upload</Text>
+                        </TouchableOpacity>
+
+                        </View>
+                        <View style={styles.rowSpacer} />
+                      </Pressable>
+                    </View>
+                }
               </View>
 
             </ScrollView>

@@ -7,7 +7,6 @@ import { StudentContext } from '../../../context/StudentContext';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { BASE_URL, IMAGE_URL } from '@env';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { images } from '../../../images';
 import Share from 'react-native-share';
 // import { PERMISSIONS, request } from 'react-native-permissions';
@@ -38,35 +37,79 @@ const EachAdmitCard = ({ route }) => {
     //     };
     // }, []);
 
-    /////////////////////////////   getting data from api while sending the id of the admitcard //////////////////////////////////////////
+    /////// getting data from api while sending the id of the admitcard  /////////////////
     const semesterAdmitCard = async () => {
-        const session = await EncryptedStorage.getItem("user_session")
-        if (session != null) {
-            try {
-                const res = await fetch(`${BASE_URL}/Student/admitCardPrint/${examId}`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${session}`
-                    }
-                })
-                const response = await res.json();
-                // const neew = response.JSON.stringify(JSON.parse('{"key":"value","array":[1,2,3]}'), null, 2)
-                console.log(response['data2']);
-                // console.log(response);
-                setSemForm(response);
-                setLoading(false)
+        setLoading(true);
 
+        const session = await EncryptedStorage.getItem("user_session");
 
-            } catch (error) {
-                console.log('Error fetching Guri data:Login:', error);
-                setLoading(false);
-                errorModel(ALERT_TYPE.DANGER, "Oops!!!", `Something Went wrong.`)
-            }
+        if (!session) {
+            setLoading(false);
+            errorModel(ALERT_TYPE.DANGER, "Session Expired", "Please login again");
+            return;
         }
 
-    }
+        try {
+            const res = await fetch(`${BASE_URL}/Student/admitCardPrint/${examId}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${session}`
+                }
+            });
 
-    ////////////////////////// to create structure of the pdf which user has to send /////////////////////////////
+            // 🔹 Handle HTTP errors
+            if (!res.ok) {
+                throw new Error(`HTTP Error: ${res.status}`);
+            }
+
+            const response = await res.json();
+
+            console.log("FULL RESPONSE:", response);
+
+            // 🔹 Handle API-level errors
+            if (!response.success) {
+                setSemForm(null);
+                errorModel(
+                    ALERT_TYPE.WARNING,
+                    "No Data",
+                    response.message || "No admit card data found"
+                );
+                return;
+            }
+
+            // 🔹 Safe defaults
+            const safeData = {
+                data1: response.data1 || [],
+                data2: response.data2 || [],
+                data3: response.data3 || [],
+            };
+
+            setSemForm(safeData);
+
+            // 🔹 Optional: Empty state handling
+            if (safeData.data2.length === 0) {
+                errorModel(
+                    ALERT_TYPE.INFO,
+                    "No Subjects",
+                    "No subjects found for this exam"
+                );
+            }
+
+        } catch (error) {
+            console.log('Error fetching Admit Card:', error);
+
+            errorModel(
+                ALERT_TYPE.DANGER,
+                "Oops!!!",
+                "Something went wrong. Please try again."
+            );
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /////////// to create structure of the pdf which user has to send //////////////
 
     const createPdf = async () => {
         // console.log(data.data);
@@ -79,7 +122,7 @@ const EachAdmitCard = ({ route }) => {
         let imgUrl = '../../images/gku-logo.png'
         let rows = ''
         // <Text style={[styles.cardTxt, { color: 'black' }]}>{result['ExamDate'] ? result['ExamDate'].split('T')[0].split('-').reverse().join("-") : null}{result['ExamSession'] && `/ ${result['ExamSession']}`}</Text>
-        semForm['data2'].map((result, i) => {
+        semForm['data2']?.map((result, i) => {
             const examDate = result['ExamDate'] ? result['ExamDate'].split('T')[0].split('-').reverse().join("-") : ''
             const sessionMap = {
                 M: 'Morning',
@@ -411,119 +454,164 @@ const EachAdmitCard = ({ route }) => {
         // </View>
         <AlertNotificationRoot>
             <View>
-
                 <ScrollView>
-                    {loading ? <ActivityIndicator /> :
-                        <View style={styles.cardOuter}>
-                            {/* {
-                    console.log('width is ::: ',screenWidth)
-                    }
-                    {
-                    console.log('height is ::: ',screenHeight)
-                    } */}
-                            <ScrollView
-                                horizontal style={{ width: screenWidth > screenHeight && "100%" }}
-                            >
-                                <View style={{ flex: 1 }}>
 
-                                    {/* header with details */}
-                                    <View style={styles.header}>
-                                        <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>Name: {semForm['data1'][0]['StudentName']}</Text>
-                                            </View>
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>RollNo.: {semForm['data1'][0]['UniRollNo']}</Text>
-                                            </View >
-                                        </View>
-                                        <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>Father's Name: {semForm['data1'][0]['FatherName']}</Text>
-                                            </View >
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>Course: {semForm['data1'][0]['Course']}</Text>
-                                            </View>
-                                        </View>
-                                        <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>Semester: {semForm['data2'][0]?.['SemesterId']}</Text>
-                                            </View >
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>Batch: {semForm['data1'][0]['Batch']}</Text>
-                                            </View>
-                                        </View>
+                    {loading ? (
+                        <ActivityIndicator />
+                    ) : (() => {
+                        const data1 = semForm?.data1 || [];
+                        const data2 = semForm?.data2 || [];
+                        const data3 = semForm?.data3 || [];
 
-                                    </View>
+                        const student = data1[0] || {};
+                        const timing = data3[0] || {};
 
-                                    {/* header end with details */}
-                                    <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: colors.uniBlue }}>
-                                        <View style={[styles.cellStyle, { flex: 0.5 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>Sno.</Text>
-                                        </View >
-                                        <View style={[styles.cellStyle, { flex: 3.5 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>SubjectName/SubjectCode</Text>
-                                        </View>
-                                        <View style={[styles.cellStyle, { flex: .3 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>Int.</Text>
-                                        </View>
-                                        <View style={[styles.cellStyle, { flex: .3 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>Ext.</Text>
-                                        </View>
-                                        <View style={[styles.cellStyle, { flex: 1 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>T/P</Text>
-                                        </View>
-                                        <View style={[styles.cellStyle, { flex: 1.4 }]}>
-                                            <Text style={[styles.cardTxt, { color: 'white' }]}>Date/Shift</Text>
-                                        </View>
-                                    </View>
-                                    {semForm['data2'].map((result, index) => (
-                                        <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }} key={index}>
-                                            <View style={[styles.cellStyle, { flex: 0.5 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>{index + 1}</Text>
-                                            </View >
-                                            <View style={[styles.cellStyle, { flex: 3.5 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>{`${result['SubjectName']} (${result['SubjectCode']})`}</Text>
+                        if (data1.length === 0) {
+                            return (
+                                <Text style={{ textAlign: 'center', marginTop: 40 }}>
+                                    No Admit Card Data Found
+                                </Text>
+                            );
+                        }
+
+                        return (
+                            <>
+                                <View style={styles.cardOuter}>
+                                    <ScrollView horizontal style={{ width: screenWidth > screenHeight && "100%" }}>
+                                        <View style={{ flex: 1 }}>
+
+                                            {/* 🔹 HEADER */}
+                                            <View style={styles.header}>
+
+                                                <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>Name: {student.StudentName || '-'}</Text>
+                                                    </View>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>RollNo.: {student.UniRollNo || '-'}</Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>Father's Name: {student.FatherName || '-'}</Text>
+                                                    </View>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>Course: {student.Course || '-'}</Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', width: screenWidth * 2, justifyContent: 'space-between', backgroundColor: 'white' }}>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>Semester: {data2[0]?.SemesterId || '-'}</Text>
+                                                    </View>
+                                                    <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                        <Text style={styles.cardTxt}>Batch: {student.Batch || '-'}</Text>
+                                                    </View>
+                                                </View>
+
                                             </View>
-                                            <View style={[styles.cellStyle, { flex: .3 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}> {result['InternalExam']}</Text>
+
+                                            {/* 🔹 TABLE HEADER */}
+                                            <View style={{ flexDirection: 'row', width: screenWidth * 2, backgroundColor: colors.uniBlue }}>
+                                                <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>Sno.</Text>
+                                                </View>
+                                                <View style={[styles.cellStyle, { flex: 3.5 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>SubjectName/Code</Text>
+                                                </View>
+                                                <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>Int.</Text>
+                                                </View>
+                                                <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>Ext.</Text>
+                                                </View>
+                                                <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>T/P</Text>
+                                                </View>
+                                                <View style={[styles.cellStyle, { flex: 1.5 }]}>
+                                                    <Text style={[styles.cardTxt, { color: 'white' }]}>Date/Shift</Text>
+                                                </View>
                                             </View>
-                                            <View style={[styles.cellStyle, { flex: .3 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}> {result['ExternalExam']}</Text>
-                                            </View>
-                                            <View style={[styles.cellStyle, { flex: 1 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}> {result['SubjectType']}</Text>
-                                            </View>
-                                            <View style={[styles.cellStyle, { flex: 1.4 }]}>
-                                                <Text style={[styles.cardTxt, { color: 'black' }]}>
-                                                    {result['ExamDate']
-                                                        ? result['ExamDate'].split('T')[0].split('-').reverse().join('-')
-                                                        : null}
-                                                    {result['ExamSession'] && (() => {
-                                                        const sessionMap = { M: 'Morning', A: 'Afternoon', E: 'Evening' };
-                                                        return ` / ${sessionMap[result['ExamSession']] || result['ExamSession']}`;
-                                                    })()}
+
+                                            {/* 🔹 TABLE DATA */}
+                                            {data2.length > 0 ? (
+                                                data2.map((result, index) => (
+                                                    <View
+                                                        key={index}
+                                                        style={{
+                                                            flexDirection: 'row',
+                                                            width: screenWidth * 2,
+                                                            backgroundColor: 'white'
+                                                        }}
+                                                    >
+                                                        <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                            <Text style={styles.cardTxt}>{index + 1}</Text>
+                                                        </View>
+
+                                                        <View style={[styles.cellStyle, { flex: 3.5 }]}>
+                                                            <Text style={styles.cardTxt}>
+                                                                {result.SubjectName || '-'} ({result.SubjectCode || '-'})
+                                                            </Text>
+                                                        </View>
+
+                                                        <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                            <Text style={styles.cardTxt}>{result.InternalExam || '-'}</Text>
+                                                        </View>
+
+                                                        <View style={[styles.cellStyle, { flex: 0.5 }]}>
+                                                            <Text style={styles.cardTxt}>{result.ExternalExam || '-'}</Text>
+                                                        </View>
+
+                                                        <View style={[styles.cellStyle, { flex: 1 }]}>
+                                                            <Text style={styles.cardTxt}>{result.SubjectType || '-'}</Text>
+                                                        </View>
+
+                                                        <View style={[styles.cellStyle, { flex: 1.5 }]}>
+                                                            <Text style={styles.cardTxt}>
+                                                                {result.ExamDate
+                                                                    ? result.ExamDate.split('T')[0].split('-').reverse().join('-')
+                                                                    : '-'}
+                                                                {result.ExamSession
+                                                                    ? ` / ${{
+                                                                        M: 'Morning',
+                                                                        A: 'Afternoon',
+                                                                        E: 'Evening'
+                                                                    }[result.ExamSession] || result.ExamSession}`
+                                                                    : ''}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                ))
+                                            ) : (
+                                                <View style={{ padding: 20 }}>
+                                                    <Text style={{ textAlign: 'center', color: '#999' }}>
+                                                        No Subjects Found
+                                                    </Text>
+                                                </View>
+                                            )}
+
+                                            {/* 🔹 TIMING */}
+                                            <View style={{ marginTop: 10 }}>
+                                                <Text style={{ color: 'red', fontWeight: '600' }}>
+                                                    Timing :- Morning: {timing.Morning || '-'} | Evening: {timing.Evening || '-'}
                                                 </Text>
                                             </View>
-                                        </View>
-                                    ))}
-                                    <View>
-                                        <Text style={{ color: 'red', fontWeight: '600' }}>Timing :-  Morning: {semForm['data3'][0]['Morning']} | Evening: {semForm['data3'][0]['Evening']}</Text>
-                                    </View>
-                                </View>
-                            </ScrollView>
 
-                        </View>
-                    }
-                    {!loading &&
-                        <>
-                            {/* <TouchableOpacity style={styles.printBtn} onPress={()=>saveFile()}>
-                        <Text style={styles.btnTxt}>Print/Download the file</Text>
-                    </TouchableOpacity> */}
-                            <TouchableOpacity style={styles.printBtn} onPress={() => createPdf()}>
-                                <Text style={styles.btnTxt}>Share the file</Text>
-                            </TouchableOpacity>
-                        </>
-                    }
+                                        </View>
+                                    </ScrollView>
+                                </View>
+
+                                {/* 🔹 BUTTON */}
+                                {data2.length > 0 && (
+                                    <TouchableOpacity style={styles.printBtn} onPress={createPdf}>
+                                        <Text style={styles.btnTxt}>Share the file</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </>
+                        );
+                    })()}
+
                 </ScrollView>
             </View>
         </AlertNotificationRoot>

@@ -6,14 +6,14 @@ import colors from '../../../colors';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
 import { StudentContext } from '../../../context/StudentContext';
 import axios from 'axios';
-import { convertUTCToIST } from '../../../services/dateUTCToIST'
+import { convertUTCToISTComplaintUse } from '../../../services/dateUTCToIST'
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 const screenWidth = Dimensions.get("window").width
 const screenHeight = Dimensions.get("window").height
 
 const SupervisorPendingTask = () => {
-    const { StaffIDNo } = useContext(StudentContext);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [complainData, setComplainData] = useState([])
@@ -24,38 +24,40 @@ const SupervisorPendingTask = () => {
 
     const complains = async (reset = false) => {
         if (loading) return;
-
         setLoading(true);
-
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/complainForSupervisor`, {
-                StaffIDNo,
-                page: reset ? 1 : page,
-                limit: 50,
-            });
-
-            const newRecords = response.data;
-
+            const session = await EncryptedStorage.getItem("user_session");
+            if (!session) return;
+            const response = await axios.post(
+                `${BASE_URL}/complain/complainForSupervisor`,
+                {
+                    page: reset ? 1 : page,
+                    limit: 50,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${session}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            const newRecords = Array.isArray(response.data) ? response.data : []; // or response.data.data
+            // console.log("newRecords::", newRecords);
             if (reset) {
                 setComplainData(newRecords);
-                setPage(2); // next page
+                setPage(2);
             } else {
                 setComplainData(prev => [...prev, ...newRecords]);
                 setPage(prev => prev + 1);
             }
-
-            // Continue until API returns []
             setHasMore(newRecords.length > 0);
 
         } catch (error) {
-            console.log("error", error);
+            console.log("error::", error?.response?.data || error.message);
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
-
-
-
 
     useFocusEffect(
         useCallback(() => {
@@ -104,7 +106,7 @@ const SupervisorPendingTask = () => {
                 <View style={styles.row}>
                     <View style={{ width: "50%" }}>
                         <Text style={styles.label}>Complaint Date</Text>
-                        <Text style={styles.value}>{convertUTCToIST(item.created_at)}</Text>
+                        <Text style={styles.value}>{convertUTCToISTComplaintUse(item.CreatedDate)}</Text>
                     </View>
 
                     <View style={{ width: "50%" }}>
@@ -165,19 +167,34 @@ const SupervisorPendingTask = () => {
     return (
         <AlertNotificationRoot>
             <View style={{ flex: 1 }}>
-                <FlatList
-                    data={complainData}
-                    renderItem={({ item }) => (
-                        <ComplainCard item={item} navigation={navigation} />
-                    )}
-                    keyExtractor={(item) => item.id.toString()}
-                    onEndReached={() => {
-                        console.log("END REACHED");
-                        if (hasMore && !loading) {
-                            complains();
+                {
+                    loading && complainData.length == 0 ? (
+                        <ActivityIndicator style={{flex:1}} /> 
+                    )
+                    :
+                    <FlatList
+                        data={complainData}
+                        renderItem={({ item }) => (
+                            <ComplainCard item={item} navigation={navigation} />
+                        )}
+                        keyExtractor={(item) => item.id.toString()}
+                        onEndReached={() => {
+                            if (hasMore && !loading) {
+                                complains();
+                            }
+                        }}
+                        ListFooterComponent={
+                            loading && complainData.length > 0 ? (
+                                <ActivityIndicator style={{marginVertical:20}} />
+                            ) : null
                         }
-                    }}
-                />
+                        ListEmptyComponent={
+                            complainData.length == 0 && 
+                                <Text style={{textAlign:'center', color:'#1b1b1b', marginVertical:20}}>No Records to Show</Text>
+                            
+                        }
+                    />
+                }
             </View>
         </AlertNotificationRoot>
     )

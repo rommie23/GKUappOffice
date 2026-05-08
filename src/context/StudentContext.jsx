@@ -16,6 +16,7 @@ const StudentContextProvider = ({ children }) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [imageStatus, setImageStatus] = useState('')
     const [mobileToken, setMobileToken] = useState('')
+    const [blocked, setBlocked] = useState(false)
     const ignoreTap = useRef(false);
 
     const openMenu = (event) => {       
@@ -34,7 +35,7 @@ const StudentContextProvider = ({ children }) => {
     };
 
     return (
-        <StudentContext.Provider value={{ data, setData, isLoggedin, setIsLoggedin, totalSemester, setTotalSemester, totalBooksAndFine, setTotalBooksAndFine, userType, setUserType, StaffIDNo, setStaffIDNo, studentIDNo, setStudentIDNo, staffImage, setStaffImage, studentImage, setStudentImage, openMenu, closeMenu, menuVisible, imageStatus, setImageStatus, mobileToken, setMobileToken }}>
+        <StudentContext.Provider value={{ data, setData, isLoggedin, setIsLoggedin, totalSemester, setTotalSemester, totalBooksAndFine, setTotalBooksAndFine, userType, setUserType, StaffIDNo, setStaffIDNo, studentIDNo, setStudentIDNo, staffImage, setStaffImage, studentImage, setStudentImage, openMenu, closeMenu, menuVisible, imageStatus, setImageStatus, mobileToken, setMobileToken, blocked, setBlocked }}>
             {children}
         </StudentContext.Provider>
     )

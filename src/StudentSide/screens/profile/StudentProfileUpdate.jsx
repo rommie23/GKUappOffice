@@ -120,7 +120,8 @@ const StudentProfileUpdate = () => {
 
     const checkSpecialSymbols = (text) => {
         const regex = /[^a-zA-Z0-9,.()-_\s]/;
-        setHasSpecialSymbols(regex.test(text));
+        console.log("checkSpecialSymbols::",regex.test(text));
+        return regex.test(text);
     };
 
 
@@ -130,13 +131,17 @@ const StudentProfileUpdate = () => {
         if (abcId.length < 1) {
             setAbcId("null")
         }
-        if (hasSpecialSymbols) {
+        const symbolExist = checkSpecialSymbols(address)
+        if (symbolExist) {
             submitModel(ALERT_TYPE.WARNING,
                 "Special Character",
                 "Please remove special characters(!@#$%^&*+') from application as they are not allowed")
-        }
+                return
+            }
         else {
             try {
+                console.log({address});
+                
                 const url = `${BASE_URL}/student/updateprofile/${mobileNo}/${bloodGroup}/${abcId}/${email}/${address}/${otr}`;
                 const response = await fetch(url, {
                     method: 'POST',
@@ -550,11 +555,11 @@ const StudentProfileUpdate = () => {
                                             onChangeText={
                                                 (text) => {
                                                     setAddress(text);
-                                                    checkSpecialSymbols(text);
                                                 }
                                             }
                                             multiline
                                         />
+                                        <Text style={{color:'red', fontSize:10}}>*kindly don't put any special symbols*</Text>
                                     </View>
                                     <View style={styles.eachInput}>
                                         <Text style={styles.txtStyle}>OTR <Text style={{ color: 'red', fontSize: 12 }}>Only for Punjab SC/ST Students*</Text></Text>

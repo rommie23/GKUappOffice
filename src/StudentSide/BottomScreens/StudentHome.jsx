@@ -2,10 +2,7 @@ import { View, Text, StyleSheet, Dimensions, ScrollView, Image, TouchableOpacity
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 // import Carousel from 'react-native-reanimated-carousel';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import FeatherIcon from 'react-native-vector-icons/Feather'
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Entypo from 'react-native-vector-icons/Entypo'
-import { images } from '../../images';
 import colors from '../../colors';
 import { useNavigation } from '@react-navigation/native';
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -18,11 +15,17 @@ import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, AuthorizationStatus } from '@notifee/react-native';
 import Orientation from 'react-native-orientation-locker';
 import FontAwesome6Icon from 'react-native-vector-icons/FontAwesome6';
-import Foundation from 'react-native-vector-icons/Foundation';
 import { askForRating } from '../../services/askForRatings';
 import PlusButton from '../components/PlusButton'
 import BirthdaySparkle from '../../StaffSide/components/BirthdaySparkle'
 import BirthdayCard from '../../StaffSide/components/BirthdayCard'
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaskedView from '@react-native-masked-view/masked-view';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FeesAlert from '../components/feesRelated/FeesAlert'
+
+
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -113,13 +116,14 @@ const StudentHome = () => {
   const [isBooksLoading, setIsBooksLoading] = useState(true)
   const [noticesData, setNoticesData] = useState([])
   const [loading, setLoading] = useState(false)
-  const [showRedDot, setShowRedDot] = useState(false)
   const [refreshing, setRefreshing] = useState(false);
   const [electricityData, setElectricityData] = useState([])
   const [showElectricityTab, setShowElectricityTab] = useState(false)
   const [tabsData, setTabsData] = useState([])
   const [convoTabData, setConvoTabData] = useState([])
   const [birthdayTab, setBirthdayTab] = useState(false)
+  const [flag, setFlag] = useState([])
+  const [feePending, setFeePending] = useState(true)
 
 
   //////////////////////////// meter bill Api //////////////////////////
@@ -275,34 +279,44 @@ const StudentHome = () => {
   }
 
   // /////////////////// To hide/show tabs in UI for Gateway ///////////////
+  // ---------------- FETCH ALL TABS ----------------
+  const fetchAllTabs = async () => {
+    const session = await EncryptedStorage.getItem("user_session");
+    if (!session) return;
 
-  const checkTabs = async () => {
-    setLoading(true)
-    const session = await EncryptedStorage.getItem("user_session")
-    if (session != null) {
-      try {
-        const tabsData = await fetch(`${BASE_URL}/student/tabsToShowStudent`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            pageName: 'Dashboard_st'
-          })
-        })
-        const pageTabsData = await tabsData.json()
-        setTabsData(pageTabsData)
-        console.log(pageTabsData);
+    try {
+      const res = await fetch(`${BASE_URL}/student/tabsToShowStudentDashboard`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session}` }
+      });
 
-        setLoading(false)
-      } catch (error) {
-        console.log(error);
-        setLoading(false)
-      }
+      const data = await res.json();
+      // console.log("AllTabs:::", data);
+      setTabsData(data);
+    } catch (err) {
+      console.log(err);
     }
-  }
+  };
 
+
+  const fetchFeePending = async () => {
+    const session = await EncryptedStorage.getItem("user_session");
+    if (!session) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/student/feepending`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session}` }
+      });
+
+      const data = await res.json();
+      console.log("fetchFeePending:::", data);
+      setFeePending(data);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
 
   const convoTab = async () => {
@@ -319,11 +333,35 @@ const StudentHome = () => {
         })
         const pageTabsData = await tabsData.json()
         setConvoTabData(pageTabsData)
-        console.log("convoTab :::: ", pageTabsData);
+        // console.log("convoTab :::: ", pageTabsData);
 
         setLoading(false)
       } catch (error) {
         console.log(error);
+        setLoading(false)
+      }
+    }
+  }
+
+  const getCourseFlag = async () => {
+    setLoading(true)
+    const session = await EncryptedStorage.getItem("user_session")
+    if (session != null) {
+      try {
+        const courseFlag = await fetch(BASE_URL + '/student/checkbutton', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session}`
+          },
+        })
+        const courseFlagDetails = await courseFlag.json()
+        setFlag(courseFlagDetails)
+        // console.log('data froms api flags:::',courseFlagDetails['statusopen'][0]['flag'])
+        setFlag(courseFlagDetails['statusopen'][0]['flag'])
+        setLoading(false)
+        // console.log(transactions);
+      } catch (error) {
+        console.log('Error fetching flags data:examination:', error)
         setLoading(false)
       }
     }
@@ -334,33 +372,40 @@ const StudentHome = () => {
   useEffect(() => {
     checkBooks()
     checkSession()
-    checkTabs();
+    fetchAllTabs()
     convoTab();
+    getCourseFlag();
+    fetchFeePending();
   }, [])
 
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    checkBooks()
+    fetchAllTabs()
     checkSession()
-    checkTabs();
     convoTab();
+    fetchFeePending();
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
   }, []);
   ///////////////////  UI of the Page home ////////////////
   return (
-    <Pressable onPress={closeMenu}>
-      <ScrollView style={{ backgroundColor: '#f1f1f1', }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-        <View style={{ backgroundColor: '#f1f1f1', minHeight: screenHeight / 1.26 }}>
+    // <Pressable onPress={closeMenu}
+    // style={{ flex: 1 }} 
+    // pointerEvents="box-none">
+    <ScrollView style={{ backgroundColor: 'white' }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
+      <View style={{ backgroundColor: '#fff', minHeight: screenHeight / 1.26 }}>
 
-          <View style={[styles.container]}>
+        <View style={[styles.container]}>
 
-            {/* <View style={styles.carousalOuter}>
+          {/* <View style={styles.carousalOuter}>
           <Carousel
             loop
             width={screenWidth - 32}
@@ -382,475 +427,1154 @@ const StudentHome = () => {
           />
 
         </View> */}
-            {isLoading ? <ActivityIndicator /> :
-              <View style={{ paddingVertical: 16 }}>
-
-                {/* <TouchableOpacity style={styles.cardFull} onPress={() => { navigation.navigate('StudentNotification') }}>
-            <View style={styles.iconOuter}>
-              <IonIcon name='notifications-outline' size={20} color={'white'} />
-              <View style={styles.notificationDot}><Text></Text></View>
-            </View>
-            <View style={styles.rightText}>
-              <Text style={styles.cardTxt}>
-                Notification
-              </Text>
-              <View style={styles.smallDetails}>
-                <Text style={styles.textSmall}>Check Notifications</Text>
-              </View>
-            </View>
-          </TouchableOpacity> */}
-                {
-                  convoTabData?.data?.length > 0 && convoTabData?.data?.[0]?.ConvoRegistrationStatus == 0 && convoTabData?.data?.[0]?.RegistrationOpen == '1' ?
-                    <View>
-                      <TouchableOpacity style={[styles.cardFull, { backgroundColor: "#305CDE" }]} onPress={() => { closeMenu(); navigation.navigate('ConvocationFeePay', { fee: convoTabData?.data[0]["Fee"] }) }}>
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={[styles.iconOuter]}
-                        >
-                          {/* <MaterialCommunityIcons name='certificate' size={20} color={'white'} /> */}
-                          <FontAwesome6Icon name='graduation-cap' color={'white'} size={18} />
-                        </LinearGradient>
-                        <View style={styles.rightText}>
-                          <Text style={[styles.cardTxt, { color: '#f1f1f1' }]}>{convoTabData?.data[0]["Title"]}</Text>
-                          <View style={styles.smallDetails}>
-                            <Text style={[styles.textSmall, { color: '#f1f1f1' }]}>Apply for Convocation</Text>
-                          </View>
+          {isLoading ? <ActivityIndicator /> :
+            <View style={{ paddingVertical: 16 }}>
+              {
+                convoTabData?.data?.length > 0 && convoTabData?.data?.[0]?.ConvoRegistrationStatus == 0 && convoTabData?.data?.[0]?.RegistrationOpen == '1' ?
+                  <View>
+                    <TouchableOpacity style={[styles.cardFull, { backgroundColor: "#305CDE" }]} onPress={() => { closeMenu(); navigation.navigate('ConvocationFeePay', { fee: convoTabData?.data[0]["Fee"] }) }}>
+                      <LinearGradient
+                        colors={[colors.uniRed, colors.uniBlue]}
+                        style={[styles.iconOuter]}
+                      >
+                        {/* <MaterialCommunityIcons name='certificate' size={20} color={'white'} /> */}
+                        <FontAwesome6Icon name='graduation-cap' color={'white'} size={18} />
+                      </LinearGradient>
+                      <View style={styles.rightText}>
+                        <Text style={[styles.cardTxt, { color: '#f1f1f1' }]}>{convoTabData?.data[0]["Title"]}</Text>
+                        <View style={styles.smallDetails}>
+                          <Text style={[styles.textSmall, { color: '#f1f1f1' }]}>Apply for Convocation</Text>
                         </View>
-                      </TouchableOpacity>
-                    </View>
-                    :
-                    convoTabData?.data?.length > 0 && convoTabData?.data?.[0]?.ConvoRegistrationStatus == 1 ?
-                      <TouchableOpacity style={[styles.cardFull, { backgroundColor: "#2FA84F" }]} onPress={() => { closeMenu(); navigation.navigate('Convocation', { convoData: convoTabData?.data[0] }) }}>
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={[styles.iconOuter]}
-                        >
-                          {/* <MaterialCommunityIcons name='certificate' size={20} color={'white'} /> */}
-                          <FontAwesome6Icon name='graduation-cap' color={'white'} size={18} />
-                        </LinearGradient>
-                        <View style={styles.rightText}>
-                          <Text style={[styles.cardTxt, { color: '#f1f1f1' }]}>{convoTabData?.data[0]["Title"]}</Text>
-                          <View style={styles.smallDetails}>
-                            <Text style={[styles.textSmall, { color: '#f1f1f1' }]}>Check Status of your registration</Text>
-                          </View>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  :
+                  convoTabData?.data?.length > 0 && convoTabData?.data?.[0]?.ConvoRegistrationStatus == 1 ?
+                    <TouchableOpacity style={[styles.cardFull, { backgroundColor: "#2FA84F" }]} onPress={() => { closeMenu(); navigation.navigate('Convocation', { convoData: convoTabData?.data[0] }) }}>
+                      <LinearGradient
+                        colors={[colors.uniRed, colors.uniBlue]}
+                        style={[styles.iconOuter]}
+                      >
+                        {/* <MaterialCommunityIcons name='certificate' size={20} color={'white'} /> */}
+                        <FontAwesome6Icon name='graduation-cap' color={'white'} size={18} />
+                      </LinearGradient>
+                      <View style={styles.rightText}>
+                        <Text style={[styles.cardTxt, { color: '#f1f1f1' }]}>{convoTabData?.data[0]["Title"]}</Text>
+                        <View style={styles.smallDetails}>
+                          <Text style={[styles.textSmall, { color: '#f1f1f1' }]}>Check Status of your registration</Text>
                         </View>
-                      </TouchableOpacity> : null
-                }
-                {birthdayTab && (
-                  <>
-                    <BirthdayCard name={profileData['StudentName']} />
-                    <BirthdaySparkle show={true} />
-                  </>
-                )}
-                {/* {
-                  // Library Tab //
-                  tabsData?.[0]?.['IsVisible'] == 1 && tabsData?.[0]?.ElementName === 'Library' &&
-                  <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('StudentLibrary') }} >
-                    <LinearGradient
-                      colors={[colors.uniRed, colors.uniBlue]}
-                      style={styles.iconOuter}
-                    >
-                      <FontAwesome5 name='book-reader' size={18} color={'white'} />
-                    </LinearGradient>
-                    <View style={styles.rightText}>
-                      <Text style={styles.cardTxt}>
-                        Library
-                      </Text>
-                      <View style={styles.smallDetails}>
-                        {isBooksLoading && <Text>Loading...</Text>}
-                        {totalBooks && <Text style={styles.textSmall}>Books Issued:{totalBooks['books'][0]['books']}</Text>}
-                        {totalBooks && totalBooks['finedata'][0]['amount'] != null ? <Text style={styles.textSmall}>Fine: ₹{totalBooks['finedata'][0]['amount']}</Text> : null}
                       </View>
+                    </TouchableOpacity> : null
+              }
+              {birthdayTab && (
+                <>
+                  <BirthdayCard name={profileData['StudentName']} />
+                  <BirthdaySparkle show={true} />
+                </>
+              )}
+              {
+                feePending?.flag == 1 && (
+                  <FeesAlert
+                    feeMessage={feePending.message}
+                  />
+                )
+              }
+              {/* NEW STRUCTURE */}
+              {/* All dashboard tabs */}
+              <LinearGradient
+                colors={colors.gradientBlue}
+                locations={[0, 0.5, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Student</Text>
+                <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}>
+                    <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'nowrap', columnGap: 8, justifyContent: 'flex-start' }}>
+                      {/* Student Library */}
+                      {tabsData?.Dashboard_st?.[0]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[0]?.ElementName === 'Library' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('StudentLibrary') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialCommunityIcons name="book-open-page-variant-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Library
+                          </Text>
+                          {isBooksLoading && <Text>Loading...</Text>}
+                          {totalBooks && <Text style={styles.subTitleText}>Books Issued:{totalBooks['books'][0]['books']}</Text>}
+                          {totalBooks && totalBooks['finedata'][0]['amount'] != null ? <Text style={styles.subTitleText}>Fine: ₹{totalBooks['finedata'][0]['amount']}</Text> : null}
+                        </TouchableOpacity>
+                      }
+
+                      {/* Notice Board */}
+                      {tabsData?.Dashboard_st?.[1]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[1]?.ElementName === 'NoticeBoard' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('Notice') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialCommunityIcons name="clipboard-text-multiple-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Notices
+                          </Text>
+                          <Text style={styles.subTitleText}>Check Notice Board</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {/* My Certificates */}
+                      {tabsData?.Dashboard_st?.[4]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[4]?.ElementName === 'MyCertificates' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('MyCertificates') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Entypo name='documents' color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Certificates
+                          </Text>
+                          <Text style={styles.subTitleText}>Check or Upload Certificates</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {/* All Messages */}
+
+                      {tabsData?.Dashboard_st?.[7]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[7]?.ElementName === 'AllMessages' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('MessagesRoot') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <AntDesign name="message1" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Messages
+                          </Text>
+                          <Text style={styles.subTitleText}>Messages from Faculty</Text>
+                        </TouchableOpacity>
+                      }
                     </View>
-                  </TouchableOpacity>
-                } */}
+                  </ScrollView>
+                  <LinearGradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                    locations={[0, 0.15, 0.4, 0.7, 1]}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      width: 60,
+                      height: '100%', // ✅ Matches ScrollView height exactly
+                      borderTopRightRadius: 12,
+                      borderBottomRightRadius: 12,
+                    }}
+                    pointerEvents="none"
+                  />
+                </View>
+              </LinearGradient>
 
-                {/* NEW STRUCTURE */}
 
-                <View style={{ width: '92%', alignSelf: 'center', paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, columnGap: 28, justifyContent: 'flex-start', marginVertical: 16 }}>
+              {/* Facilities */}
 
-                  {/* Student Library */}
-                  {tabsData?.[0]?.['IsVisible'] == 1 && tabsData?.[0]?.ElementName === 'Library' &&
+              <LinearGradient
+                colors={colors.gradientCoral}
+                locations={[0, 0.3, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } }}>
+                <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Facilities</Text>
+                <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}>
+
+                    <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'nowrap', columnGap: 8, justifyContent: 'flex-start' }}>
+
+                      {tabsData?.Dashboard_st?.[8]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[8]?.ElementName === 'Transport' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { navigation.navigate('BusPassDetails') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Ionicons name="bus-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Transport
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+                      {tabsData?.Dashboard_st?.[9]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[9]?.ElementName === 'SmartCard' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { navigation.navigate('ApplyIdCard') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Ionicons name="id-card-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            SmartCard
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {/* Grievance */}
+                      {tabsData?.Dashboard_st?.[2]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[2]?.ElementName === 'Grievance' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('StudentGrievance') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialCommunityIcons name="shield-plus-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Grievance
+                          </Text>
+                          <Text style={styles.subTitleText}>Check the Grievance</Text>
+                        </TouchableOpacity>
+                      }
+                      {/* Apply Certificates */}
+                      {tabsData?.Dashboard_st?.[3]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[3]?.ElementName === 'ApplyCertificates' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('ApplyForDocuments') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Ionicons name="documents-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Documents
+                          </Text>
+                          <Text style={styles.subTitleText}>Transcript, DMC etc.</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {
+                        showElectricityTab &&
+                        <View style={{ width: '100%', alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, columnGap: 8, justifyContent: 'flex-start' }}>
+
+                          {/* Electrity Bill */}
+                          {tabsData?.Dashboard_st?.[5]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[5]?.ElementName === 'ElectrityBill' &&
+                            <TouchableOpacity
+                              activeOpacity={0.85}
+                              style={[styles.cardOuterShapeScroll]}
+                              onPress={() => { closeMenu(); navigation.navigate('StudentElectricityBill') }}
+                            >
+                              <View
+                                style={styles.iconOuterRing}
+                              >
+                                <MaskedView
+                                  style={{ flexDirection: 'row', height: 36, width: 36 }}
+                                  maskElement={
+                                    <View
+                                      style={{
+                                        backgroundColor: 'transparent',
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}
+                                    >
+                                      <MaterialCommunityIcons name='lightbulb-on-outline' color={colors.uniBlue} size={30} />
+                                    </View>
+                                  }
+                                >
+                                  <LinearGradient
+                                    colors={[colors.uniRed, colors.uniBlue]}
+                                    style={{ flex: 1 }}
+                                  />
+                                </MaskedView>
+                              </View>
+                              <Text
+                                style={styles.titleText}
+                              >
+                                Electricity
+                              </Text>
+                              <Text style={styles.subTitleText}>Current Bill is : ₹ </Text>
+                            </TouchableOpacity>
+                          }
+
+                          {/* Apply Student Leave */}
+                          {tabsData?.Dashboard_st?.[6]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[6]?.ElementName === 'SudentLeave' &&
+                            <TouchableOpacity
+                              activeOpacity={0.85}
+                              style={styles.cardOuterShapeScroll}
+                              onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}
+                            >
+                              <View
+                                style={styles.iconOuterRing}
+                              >
+                                <MaskedView
+                                  style={{ flexDirection: 'row', height: 36, width: 36 }}
+                                  maskElement={
+                                    <View
+                                      style={{
+                                        backgroundColor: 'transparent',
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                      }}
+                                    >
+                                      <Ionicons name="log-out-outline" color={colors.uniBlue} size={30} />
+                                    </View>
+                                  }
+                                >
+                                  <LinearGradient
+                                    colors={[colors.uniRed, colors.uniBlue]}
+                                    style={{ flex: 1 }}
+                                  />
+                                </MaskedView>
+                              </View>
+                              <Text
+                                style={styles.titleText}
+                              >
+                                Leave
+                              </Text>
+                              <Text style={styles.subTitleText}>Apply Leave for Hostel Students</Text>
+                            </TouchableOpacity>
+                          }
+                        </View>
+                      }
+                    </View>
+                  </ScrollView>
+                  <LinearGradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                    locations={[0, 0.15, 0.4, 0.7, 1]}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      width: 60,
+                      height: '100%', // ✅ Matches ScrollView height exactly
+                      borderTopRightRadius: 12,
+                      borderBottomRightRadius: 12,
+                    }}
+                    pointerEvents="none"
+                  />
+                </View>
+              </LinearGradient>
+
+              {/* fees card */}
+              <LinearGradient
+                colors={colors.gradientLavendar}
+                locations={[0, 0.3, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: '96%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Fees</Text>
+                <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, justifyContent: 'flex-start' }}>
+                  {
+                    tabsData?.Fees_st?.[0]?.['IsVisible'] == 1 && tabsData?.Fees_st?.[0]?.ElementName === 'PayNow' &&
                     <TouchableOpacity
                       activeOpacity={0.85}
                       style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('StudentLibrary') }}
+                      onPress={() => { closeMenu(); navigation.navigate('FeePayment') }}
                     >
                       <View
                         style={styles.iconOuterRing}
                       >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Ionicons name='cash-outline' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
                         >
-                          <FontAwesome5 name='book-reader' size={18} color={'white'} />
-                        </LinearGradient>
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
                       </View>
                       <Text
                         style={styles.titleText}
                       >
-                        Library
+                        Pay Now
                       </Text>
-                      {isBooksLoading && <Text>Loading...</Text>}
-                      {totalBooks && <Text style={styles.subTitleText}>Books Issued:{totalBooks['books'][0]['books']}</Text>}
-                      {totalBooks && totalBooks['finedata'][0]['amount'] != null ? <Text style={styles.subTitleText}>Fine: ₹{totalBooks['finedata'][0]['amount']}</Text> : null}
-                    </TouchableOpacity>
-                  }
-
-                  {/* Notice Board */}
-                  {tabsData?.[1]?.['IsVisible'] == 1 && tabsData?.[1]?.ElementName === 'NoticeBoard' &&
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('Notice') }}
-                    >
-                      <View
-                        style={styles.iconOuterRing}
-                      >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
-                        >
-                          <Entypo name='blackboard' size={20} color={'white'} />
-                        </LinearGradient>
-                      </View>
-                      <Text
-                        style={styles.titleText}
-                      >
-                        Notice Board
-                      </Text>
-                      <Text style={styles.subTitleText}>Check Notice Board</Text>
-                    </TouchableOpacity>
-                  }
-
-                  {/* Grievance */}
-                  {tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'Grievance' &&
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('StudentGrievance') }}
-                    >
-                      <View
-                        style={styles.iconOuterRing}
-                      >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
-                        >
-                          <FontAwesome5 name='shield-alt' size={20} color={'white'} />
-                        </LinearGradient>
-                      </View>
-                      <Text
-                        style={styles.titleText}
-                      >
-                        Grievance
-                      </Text>
-                      <Text style={styles.subTitleText}>Check the Grievance</Text>
-                    </TouchableOpacity>
-                  }
-
-
-                  {/* Apply Certificates */}
-                  {tabsData?.[3]?.['IsVisible'] == 1 && tabsData?.[3]?.ElementName === 'ApplyCertificates' &&
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('ApplyForDocuments') }}
-                    >
-                      <View
-                        style={styles.iconOuterRing}
-                      >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
-                        >
-                          <Foundation name="page-multiple" color="white" size={24} />
-
-                        </LinearGradient>
-                      </View>
-                      <Text
-                        style={styles.titleText}
-                      >
-                        Apply Documents
-                      </Text>
-                      <Text style={styles.subTitleText}>Transcript, DMC etc.</Text>
-                    </TouchableOpacity>
-                  }
-
-
-                  {/* My Certificates */}
-                  {tabsData?.[4]?.['IsVisible'] == 1 && tabsData?.[4]?.ElementName === 'MyCertificates' &&
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('MyCertificates') }}
-                    >
-                      <View
-                        style={styles.iconOuterRing}
-                      >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
-                        >
-                          <Entypo name='documents' size={20} color={'white'} />
-                        </LinearGradient>
-                      </View>
-                      <Text
-                        style={styles.titleText}
-                      >
-                        My Certificates
-                      </Text>
-                      <Text style={styles.subTitleText}>Check or Upload Certificates</Text>
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
                     </TouchableOpacity>
                   }
 
                   {
-                    showElectricityTab &&
-                    <View style={{ width: '100%', alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, columnGap: 28, justifyContent: 'flex-start' }}>
-
-                      {/* Electrity Bill */}
-                      {tabsData?.[5]?.['IsVisible'] == 1 && tabsData?.[5]?.ElementName === 'ElectrityBill' &&
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          style={[styles.cardOuterShape]}
-                          onPress={() => { closeMenu(); navigation.navigate('StudentElectricityBill') }}
-                        >
-                          <View
-                            style={styles.iconOuterRing}
-                          >
-                            <LinearGradient
-                              colors={[colors.uniRed, colors.uniBlue]}
-                              style={styles.iconOuter}
-                            >
-                              <MaterialCommunityIcons name='lightbulb-on-outline' size={24} color={'white'} />
-                            </LinearGradient>
-                          </View>
-                          <Text
-                            style={styles.titleText}
-                          >
-                            Electricity Bill ({electricityData["article_no"]})
-                          </Text>
-                          <Text style={styles.subTitleText}>Current Bill is : ₹ {Number(electricityData['amount'].split(' ')[0]).toFixed(2)} {electricityData['amount'].split(' ')[1]} {electricityData['amount'].split(' ')[2]}</Text>
-                        </TouchableOpacity>
-                      }
-
-                      {/* Apply Certificates */}
-                      {tabsData?.[6]?.['IsVisible'] == 1 && tabsData?.[6]?.ElementName === 'SudentLeave' &&
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          style={styles.cardOuterShape}
-                          onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}
-                        >
-                          <View
-                            style={styles.iconOuterRing}
-                          >
-                            <LinearGradient
-                              colors={[colors.uniRed, colors.uniBlue]}
-                              style={styles.iconOuter}
-                            >
-                              <FontAwesome6Icon name='user-plus' color={'white'} size={18} />
-                            </LinearGradient>
-                          </View>
-                          <Text
-                            style={styles.titleText}
-                          >
-                            Apply Leave
-                          </Text>
-                          <Text style={styles.subTitleText}>Apply Leave for Hostel Students</Text>
-                        </TouchableOpacity>
-                      }
-                    </View>
-
-                  }
-
-                  {/* All Messages */}
-
-                  {tabsData?.[7]?.['IsVisible'] == 1 && tabsData?.[7]?.ElementName === 'AllMessages' &&
+                    tabsData?.Fees_st?.[1]?.['IsVisible'] == 1 && tabsData?.Fees_st?.[1]?.ElementName === 'Receipts' &&
                     <TouchableOpacity
                       activeOpacity={0.85}
                       style={styles.cardOuterShape}
-                      onPress={() => { closeMenu(); navigation.navigate('MessagesRoot') }}
+                      onPress={() => { closeMenu(); navigation.navigate('Receipts') }}
                     >
                       <View
                         style={styles.iconOuterRing}
                       >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={styles.iconOuter}
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Ionicons name='receipt-outline' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
                         >
-                          <MaterialCommunityIcons name='message-badge' size={24} color={'white'} />
-                        </LinearGradient>
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
                       </View>
                       <Text
                         style={styles.titleText}
                       >
-                        Messages
+                        Receipts
                       </Text>
-                      <Text style={styles.subTitleText}>Messages from Faculty</Text>
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
+                    </TouchableOpacity>
+                  }
+
+                  {
+                    tabsData?.Fees_st?.[2]?.['IsVisible'] == 1 && tabsData?.Fees_st?.[2]?.ElementName === 'RecentTransactions' &&
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.cardOuterShape}
+                      onPress={() => { closeMenu(); navigation.navigate('RecentTransactions') }}
+                    >
+                      <View
+                        style={styles.iconOuterRing}
+                      >
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <MaterialCommunityIcons name='page-previous-outline' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
+                        >
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
+                      </View>
+                      <Text
+                        style={styles.titleText}
+                      >
+                        Transactions
+                      </Text>
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
                     </TouchableOpacity>
                   }
                 </View>
+              </LinearGradient>
 
 
-                {/* Notice board
-                // {
-                //   tabsData?.[1]?.['IsVisible'] == 1 && tabsData?.[1]?.ElementName === 'NoticeBoard' &&
-                //   <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('Notice') }}>
-                //     <LinearGradient
-                //       colors={[colors.uniRed, colors.uniBlue]}
-                //       style={styles.iconOuter}
-                //     >
-                //       <Entypo name='blackboard' size={20} color={'white'} />
-                //       {showRedDot &&
-                //         <View style={styles.notificationDot}><Text></Text></View>
-                //       }
+              {/* Exmination card */}
+              <LinearGradient
+                colors={colors.gradientMint}
+                locations={[0, 0.3, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Examination</Text>
+                <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}>
+                    <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'noWrap', columnGap: 8, justifyContent: 'flex-start' }}>
+                      {
+                        tabsData?.Examination_st?.[0]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[0]?.ElementName === 'RegularExamForm' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { flag == 0 ? navigation.navigate('Examination Form') : flag == 1 ? navigation.navigate('ExaminationFormPhd') : flag == 2 ? navigation.navigate('ExamFormAgricultureDiploma') : null }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <FontAwesome name="pencil-square-o" color={colors.uniBlue} size={32} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Regular
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+                      {
+                        tabsData?.Examination_st?.[1]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[1]?.ElementName === 'ReAppearExamForm' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { flag == 0 ? navigation.navigate('Reappear Form') : flag == 1 ? navigation.navigate('ReappearFormPhd') : flag == 2 ? navigation.navigate('ReappearFormAgricultureDiploma') : null }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <FontAwesome name="pencil-square-o" color={colors.uniBlue} size={32} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Reappear
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
 
-                //     </LinearGradient>
-                //     <View style={styles.rightText}>
-                //       <Text style={styles.cardTxt}>
-                //         Notice Board
-                //       </Text>
-                //       <View style={styles.smallDetails}>
-                //         <Text style={styles.textSmall}>Check Notice Board</Text>
-                //       </View>
-                //     </View>
-                //   </TouchableOpacity>
-                // } */}
+                      {
+                        tabsData?.Examination_st?.[4]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[4]?.ElementName === 'PreviousExamForms' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('MyForms') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialCommunityIcons name='text-box-check-outline' color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            All Forms
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
 
-                {/* Grievance */}
-                {/* {
-                  tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'Grievance' &&
-                  <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('StudentGrievance') }}>
-                    <LinearGradient
-                      colors={[colors.uniRed, colors.uniBlue]}
-                      style={[styles.iconOuter]}
+                      {
+                        tabsData?.Examination_st?.[6]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[6]?.ElementName === 'AdmitCard' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('AdmitCard') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <AntDesign name="idcard" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Admit Card
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {
+                        tabsData?.Examination_st?.[2]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[2]?.ElementName === 'Results' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('Result') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialCommunityIcons name="file-search-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Result
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+
+                      {
+                        tabsData?.Examination_st?.[3]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[3]?.ElementName === 'AllSubjects' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('AllSubjectsSemWise') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Entypo name='open-book' color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            All Subjects
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+                      {
+                        tabsData?.Examination_st?.[5]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[5]?.ElementName === 'CGPACalculator' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('CGPA Calculator') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <AntDesign name="dashboard" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Calulator
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+                    </View>
+                  </ScrollView>
+                  <LinearGradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
+                    locations={[0, 0.15, 0.4, 0.7, 1]}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      width: 60,
+                      height: '100%', // ✅ Matches ScrollView height exactly
+                      borderTopRightRadius: 12,
+                      borderBottomRightRadius: 12,
+                    }}
+                    pointerEvents="none"
+                  />
+                </View>
+              </LinearGradient>
+
+
+
+              {/* Academics Tabs */}
+              <LinearGradient
+                colors={colors.gradientYellow}
+                locations={[0, 0.3, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: '96%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Academics</Text>
+                <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, justifyContent: 'flex-start' }}>
+                  {
+                    tabsData?.Academics_st?.[0]?.['IsVisible'] == 1 && tabsData?.Academics_st?.[0]?.ElementName === 'StudyMaterial' &&
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.cardOuterShape}
+                      onPress={() => { navigation.navigate("StudentStudyMaterial") }}
                     >
-                      <FontAwesome5 name='shield-alt' size={20} color={'white'} />
-                    </LinearGradient>
-                    <View style={styles.rightText}>
-                      <Text style={styles.cardTxt}>
-                        Grievance
+                      <View
+                        style={styles.iconOuterRing}
+                      >
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <MaterialCommunityIcons name='book-search-outline' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
+                        >
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
+                      </View>
+                      <Text
+                        style={styles.titleText}
+                      >
+                        Study Material
                       </Text>
-                      <View style={styles.smallDetails}>
-                        <Text style={styles.textSmall}>Check the Grievance</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                } */}
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
+                    </TouchableOpacity>
+                  }
 
-                {/* Apply Certificates */}
-
-                {/* {
-                  tabsData?.[3]?.['IsVisible'] == 1 && tabsData?.[3]?.ElementName === 'ApplyCertificates' &&
-                  <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('ApplyForDocuments') }}>
-                    <LinearGradient
-                      colors={[colors.uniRed, colors.uniBlue]}
-                      style={[styles.iconOuter]}
+                  {
+                    tabsData?.Academics_st?.[3]?.['IsVisible'] == 1 && tabsData?.Academics_st?.[3]?.ElementName === 'Attendance' &&
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.cardOuterShape}
+                      onPress={() => { navigation.navigate("StudentAttendance") }}
                     >
-                      <Entypo name='documents' size={20} color={'white'} />
-                    </LinearGradient>
-                    <View style={styles.rightText}>
-                      <Text style={styles.cardTxt}>
-                        Apply Documents
+                      <View
+                        style={styles.iconOuterRing}
+                      >
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <MaterialCommunityIcons name='fingerprint' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
+                        >
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
+                      </View>
+                      <Text
+                        style={styles.titleText}
+                      >
+                        Proxy
                       </Text>
-                      <View style={styles.smallDetails}>
-                        <Text style={styles.textSmall}>Transcript, Character Certificate, DMC etc.</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                } */}
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
+                    </TouchableOpacity>
+                  }
 
-                {/* My Certificates */}
-
-                {/* {
-                  tabsData?.[4]?.['IsVisible'] == 1 && tabsData?.[4]?.ElementName === 'MyCertificates' &&
-                  <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('MyCertificates') }}>
-                    <LinearGradient
-                      colors={[colors.uniRed, colors.uniBlue]}
-                      style={[styles.iconOuter]}
+                  {
+                    tabsData?.Academics_st?.[1]?.['IsVisible'] == 1 && tabsData?.Academics_st?.[1]?.ElementName === 'Assignments' &&
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.cardOuterShape}
+                      onPress={() => { navigation.navigate('StudentAssignments') }}
                     >
-                      <MaterialCommunityIcons name='certificate' size={20} color={'white'} />
-                    </LinearGradient>
-                    <View style={styles.rightText}>
-                      <Text style={styles.cardTxt}>My Certificates</Text>
-                      <View style={styles.smallDetails}>
-                        <Text style={styles.textSmall}>Check or Upload Certificates</Text>
+                      <View
+                        style={styles.iconOuterRing}
+                      >
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <MaterialCommunityIcons name='file-document-multiple-outline' color={colors.uniBlue} size={30} />
+                            </View>
+                          }
+                        >
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                } */}
+                      <Text
+                        style={styles.titleText}
+                      >
+                        Assignments
+                      </Text>
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
+                    </TouchableOpacity>
+                  }
 
-
-                {
-                  // showElectricityTab &&
-                  // <View>
-                  //   {
-                  //     tabsData?.[5]?.['IsVisible'] == 1 && tabsData?.[5]?.ElementName === 'ElectrityBill' &&
-                  //     <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('StudentElectricityBill') }}>
-                  //       <LinearGradient
-                  //         colors={[colors.uniRed, colors.uniBlue]}
-                  //         style={[styles.iconOuter]}
-                  //       >
-                  //         <MaterialCommunityIcons name='lightbulb-on-outline' size={24} color={'white'} />
-                  //       </LinearGradient>
-                  //       <View style={styles.rightText}>
-                  //         <Text style={styles.cardTxt}>
-                  //           Electricity Bill ({electricityData["article_no"]})
-                  //         </Text>
-                  //         <View style={styles.smallDetails}>
-                  //           <Text style={styles.textSmall}>Current Bill is : ₹ {Number(electricityData['amount'].split(' ')[0]).toFixed(2)} {electricityData['amount'].split(' ')[1]} {electricityData['amount'].split(' ')[2]}</Text>
-                  //         </View>
-                  //       </View>
-                  //     </TouchableOpacity>
-                  //   }
-                  //   {
-                  //     tabsData?.[6]?.['IsVisible'] == 1 && tabsData?.[6]?.ElementName === 'SudentLeave' &&
-                  //     <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}>
-                  //       <LinearGradient
-                  //         colors={[colors.uniRed, colors.uniBlue]}
-                  //         style={[styles.iconOuter]}
-                  //       >
-                  //         {/* <MaterialCommunityIcons name='certificate' size={20} color={'white'} /> */}
-                  //         <FontAwesome6Icon name='user-plus' color={'white'} size={18} />
-                  //       </LinearGradient>
-                  //       <View style={styles.rightText}>
-                  //         <Text style={styles.cardTxt}>Apply Leave</Text>
-                  //         <View style={styles.smallDetails}>
-                  //           <Text style={styles.textSmall}>Apply Leave for Hostel Students</Text>
-                  //         </View>
-                  //       </View>
-                  //     </TouchableOpacity>
-                  //   }
-                  // </View>
-                }
-
-                {
-                  // tabsData?.[7]?.['IsVisible'] == 1 && tabsData?.[7]?.ElementName === 'AllMessages' &&
-                  // <TouchableOpacity style={styles.cardFull} onPress={() => { closeMenu(); navigation.navigate('MessagesRoot') }}>
-                  //   <LinearGradient
-                  //     colors={[colors.uniRed, colors.uniBlue]}
-                  //     style={[styles.iconOuter]}
-                  //   >
-                  //     {/* <MaterialCommunityIcons name="message-badge" color="#000" size={24} /> */}
-                  //     <MaterialCommunityIcons name='message-badge' size={24} color={'white'} />
-                  //   </LinearGradient>
-                  //   <View style={styles.rightText}>
-                  //     <Text style={styles.cardTxt}>Messages</Text>
-                  //     <View style={styles.smallDetails}>
-                  //       <Text style={styles.textSmall}>Messages from Faculity</Text>
-                  //     </View>
-                  //   </View>
-                  // </TouchableOpacity>
-                }
-
-              </View>
-            }
-          </View>
+                  {
+                    tabsData?.Academics_st?.[2]?.['IsVisible'] == 1 && tabsData?.Academics_st?.[2]?.ElementName === 'Syllabus' &&
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.cardOuterShape}
+                      onPress={() => { navigation.navigate('StudentSyllabus') }}
+                    >
+                      <View
+                        style={styles.iconOuterRing}
+                      >
+                        <MaskedView
+                          style={{ flexDirection: 'row', height: 36, width: 36 }}
+                          maskElement={
+                            <View
+                              style={{
+                                backgroundColor: 'transparent',
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <MaterialCommunityIcons name="clipboard-list-outline" color={colors.uniBlue} size={30} />
+                            </View>
+                          }
+                        >
+                          <LinearGradient
+                            colors={[colors.uniRed, colors.uniBlue]}
+                            style={{ flex: 1 }}
+                          />
+                        </MaskedView>
+                      </View>
+                      <Text
+                        style={styles.titleText}
+                      >
+                        Syllabus
+                      </Text>
+                      <Text style={styles.subTitleText}>Bus Service Details</Text>
+                    </TouchableOpacity>
+                  }
+                </View>
+              </LinearGradient>
+            </View>
+          }
         </View>
-        {/* the plus button for more student options */}
-        <PlusButton />
-      </ScrollView>
-    </Pressable>
+      </View >
+      {/* the plus button for more student options */}
+      {/* <PlusButton /> */}
+    </ScrollView >
+    // </Pressable>
   )
 }
 
@@ -899,61 +1623,64 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center'
   },
-
-  // CSS of red dot over the bell icon
-  notificationDot: {
-    height: 12,
-    width: 12,
-    backgroundColor: 'red',
-    position: 'absolute',
-    left: 25,
-    top: -5,
-    borderRadius: 10
-  },
   textSmall: {
     color: '#4C4E52',
     fontSize: 14
   },
-  text: {
-    color: '#f1f1f1',
-  },
   iconOuter: {
-    // backgroundColor: colors.uniBlue,
-    width: 36,
-    height: 36,
+    backgroundColor: colors.uniBlue,
+    width: 48,
+    height: 48,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
 
-  cardOuterShape: {
-    backgroundColor: '#fff',
-    width: '45%',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+  cardOuterShapeScroll: {
+    width: screenWidth * .23,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     alignItems: 'center',
     borderRadius: 14,
     marginBottom: 12,
-
-    elevation: 3,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+  },
+  cardOuterShapeMain: {
+    // backgroundColor: '#fff',
+    width: '23%',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    borderRadius: 14,
+    marginBottom: 12,
+  },
+  cardOuterShape: {
+    // backgroundColor: '#fff',
+    width: '30%',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    borderRadius: 14,
+    marginBottom: 12,
   },
   iconOuterRing: {
     borderColor: colors.uniBlue,
-    borderWidth: 1,
-    borderRadius: 28,
+    // borderWidth: 0.2,
+    borderRadius: 12,
     padding: 8,
     marginBottom: 8,
-    backgroundColor: '#f9f9ff',
+    // backgroundColor: '#f9f9ff',
+    // elevation: 3,
+    // shadowColor: '#000',
+    // shadowOpacity: 0.07,
+    // shadowRadius: 6,
+    // shadowOffset: { width: 0, height: 3 },
   },
+
+
   titleText: {
-    fontSize: 13.5,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
     color: '#223260',
     marginBottom: 2,
     textAlign: 'center',
@@ -962,5 +1689,6 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: '#8a8a8a',
     textAlign: 'center',
+    display: 'none'
   }
 })

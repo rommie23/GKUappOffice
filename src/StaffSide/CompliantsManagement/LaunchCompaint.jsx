@@ -48,7 +48,7 @@ const LaunchCompaint = () => {
     const bindCategories = async () => {
         setIsLoading(true)
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/categories`)
+            const response = await axios.post(`${BASE_URL}/complain/categories`)
             const categoriesData = response.data;
             setCategoriesList(categoriesData.map((item) => (
                 { key: item.ID, value: item.CategoryName }
@@ -61,6 +61,7 @@ const LaunchCompaint = () => {
             setIsLoading(false)
         }
     }
+    
     const bindBuilding = async (val) => {
         const category = categoriesList.find(item => item.key === val);
         setSelectedCategoryValue(category.value)
@@ -69,7 +70,7 @@ const LaunchCompaint = () => {
         setSelectedCategory(category.key)
 
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/buildings`)
+            const response = await axios.post(`${BASE_URL}/complain/buildings`)
             const buildingsData = response.data;
             setBuildingList(buildingsData.map((item) => (
                 { key: item.ID, value: item["Name"] }
@@ -90,7 +91,7 @@ const LaunchCompaint = () => {
         setSelectedBuildingValue(building.value)
         setSelectedBuilding(building.key)
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/floors/${val}`)
+            const response = await axios.post(`${BASE_URL}/complain/floors/${val}`)
             const floorsData = response.data;
             console.log("floorsData::", floorsData);
 
@@ -124,12 +125,12 @@ const LaunchCompaint = () => {
         // console.log("floor.value",floor.value);
 
         try {
-            console.log(`${LIMS_URL}/complain/allrooms/${selectedBuilding}/${val}`);
+            console.log(`${BASE_URL}/complain/allrooms/${selectedBuilding}/${val}`);
 
-            const response = await axios.post(`${LIMS_URL}/complain/allrooms/${selectedBuilding}/${val}`)
+            const response = await axios.post(`${BASE_URL}/complain/allrooms/${selectedBuilding}/${val}`)
             const roomsData = response.data;
             setRoomNoList(roomsData.map((item) => (
-                { key: item["RoomNo"], value: item["RoomNo"] }
+                { key: item["ID"], value: item["RoomNo"] }
             )))
             // setRoomTypeList(roomsData.map((item)=>(
             //     {key:item.ID, value:item["RoomType"]}
@@ -140,23 +141,25 @@ const LaunchCompaint = () => {
         }
     }
 
-    const bindRoomType = async (val) => {
-        const roomNo = roomNoList.find(item => item.key === val);
-        setSelectedRoomNoValue(roomNo.value)
-        try {
-            const response = await axios.post(`${LIMS_URL}/complain/roomType/${selectedBuilding}/${val}`)
-            const roomsData = response.data;
-            setRoomTypeList(roomsData.map((item) => (
-                { key: item.ID, value: item["RoomType"] }
-            )))
-            console.log(roomsData);
-        } catch (error) {
-            console.log("bindFloor::", error);
-        }
-    }
+    // const bindRoomType = async (val) => {
+    //     const roomNo = roomNoList.find(item => item.key === val);
+    //     setSelectedRoomNoValue(roomNo.value)
+    //     try {
+    //         const response = await axios.post(`${BASE_URL}/complain/roomType/${selectedBuilding}/${val}`)
+    //         const roomsData = response.data;
+    //         setRoomTypeList(roomsData.map((item) => (
+    //             { key: item.ID, value: item["RoomType"] }
+    //         )))
+    //         console.log(roomsData);
+    //     } catch (error) {
+    //         console.log("bindFloor::", error);
+    //     }
+    // }
 
     const selectedRoomName = async (val) => {
-        const roomName = roomTypeList.find(item => item.key === val)
+        console.log("selectedRoomName::",val);
+        
+        const roomName = roomNoList.find(item => item.key === val)
         setSelectedRoomNameValue(roomName.value)
         setLocationId(roomName.key)
     }
@@ -174,13 +177,13 @@ const LaunchCompaint = () => {
         );
 
         try {
-            const response = await axios.post(`${LIMS_URL}/complain/launchComplain`, {
+            const response = await axios.post(`${BASE_URL}/complain/launchComplain`, {
                 title, description, selectedCategory, locationId, StaffIDNo
             })
             const insertData = response.data;
             console.log(insertData);
-            if (insertData.affectedRows > 0) {
-                newModel(ALERT_TYPE.SUCCESS, "Success", `Complaint Registered Successfully.`)
+            if (insertData.success) {
+                newModel(ALERT_TYPE.SUCCESS, "Success", insertData.message)
             }
             setIsLoading(false)
         } catch (error) {
@@ -189,12 +192,6 @@ const LaunchCompaint = () => {
             setIsLoading(false)
         }
     }
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 2000);
-    }, []);
 
     const newModel = (type, title, message) => {
         Dialog.show({
@@ -282,7 +279,8 @@ const LaunchCompaint = () => {
                                     <View style={{ alignSelf: 'flex-start', width: '50%' }}>
                                         <Text style={[styles.label]}>Select Room No.</Text>
                                         <SelectList boxStyles={{ padding: -5, width: '100%' }}
-                                            setSelected={(val) => bindRoomType(val)}
+                                            // setSelected={(val) => bindRoomType(val)}
+                                            setSelected={(val) => selectedRoomName(val)}
                                             fontFamily='time'
                                             data={roomNoList}
                                             arrowicon={<FontAwesome5Icon name="chevron-down" size={12} color={'black'} style={{ marginTop: 4, marginLeft: 16 }} />}
@@ -293,7 +291,7 @@ const LaunchCompaint = () => {
                                         />
                                     </View>
                                 </View>
-                                <View style={{ alignSelf: 'flex-start' }}>
+                                {/* <View style={{ alignSelf: 'flex-start' }}>
                                     <Text style={[styles.label]}>Select Room type</Text>
                                     <SelectList boxStyles={{ padding: -5, width: '100%' }}
                                         setSelected={(val) => selectedRoomName(val)}
@@ -305,7 +303,7 @@ const LaunchCompaint = () => {
                                         inputStyles={{ color: 'black' }}
                                         dropdownTextStyles={{ color: 'black' }}
                                     />
-                                </View>
+                                </View> */}
                                 {title != '' && description != '' && selectedCategory != 0 && selectedBuilding != 0 && selectedRoomNameValue != '' ?
                                     <TouchableOpacity
                                         style={[{ backgroundColor: colors.uniBlue, paddingVertical: 8, borderRadius: 8, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 20, paddingHorizontal: 16, width: '50%' }]}

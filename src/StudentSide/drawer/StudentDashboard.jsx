@@ -4,34 +4,58 @@ import { createDrawerNavigator } from '@react-navigation/drawer'
 import Main from './Main'
 import { StudentContext } from '../../context/StudentContext';
 import FeatherIcon from 'react-native-vector-icons/Feather'
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFocusedRouteNameFromRoute, useFocusEffect, useNavigation } from '@react-navigation/native'
 import colors from '../../colors'
 import { Button, Menu, Divider, PaperProvider } from 'react-native-paper';
 import EncryptedStorage from 'react-native-encrypted-storage'
 import { IMAGE_URL, BASE_URL } from '@env'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 
 // const Drawer = createDrawerNavigator()
 const Drawer = createDrawerNavigator();
 const screenWidth = Dimensions.get('window').width
 
 const StudentDashboard = () => {
-  const { studentIDNo, setIsLoggedin, setUserType, studentImage, mobileToken } = useContext(StudentContext)
+  const { studentIDNo, setIsLoggedin, setUserType, studentImage, mobileToken, data } = useContext(StudentContext)
+  console.log("profile Data ", data);
+  
   const navigation = useNavigation()
   const ImageUrl = `${IMAGE_URL}Images/Students/`;
   const [menuVisible, setMenuVisible] = useState(false);
   const [pendingNotification, setPendingNotifications] = useState('')
 
-  // const removeSession = async () => {
-  //   try {
-  //     await EncryptedStorage.removeItem('user_session')
-  //     await EncryptedStorage.removeItem('clickTime')
-  //     // navigation.navigate('Login')
-  //     setIsLoggedin(false)
-  //     setUserType('')
-  //   } catch (error) {
-  //     console.log('Error in sessionDestroy StudentHome:', error);
-  //   }
-  // }
+
+  ////////////////////// Animation style start ///////////////////////
+  const translateX = useSharedValue(-screenWidth * 0.75);
+  const overlayOpacity = useSharedValue(0);
+
+  const openMenu = () => {
+    setMenuVisible(true);
+    translateX.value = withTiming(0, { duration: 280 });
+    overlayOpacity.value = withTiming(1, { duration: 280 });
+  };
+
+  const closeMenu = () => {
+    translateX.value = withTiming(-screenWidth * 0.75, { duration: 220 });
+    overlayOpacity.value = withTiming(0, { duration: 220 });
+
+    setTimeout(() => setMenuVisible(false), 220);
+  };
+
+  const drawerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  ////////////////////// Animation style end ///////////////////////
 
   const pendingNotificationCount = async () => {
     const session = await EncryptedStorage.getItem("user_session")
@@ -59,55 +83,12 @@ const StudentDashboard = () => {
       pendingNotificationCount();
     }, [])
   )
-  // const removeSession = async () => {
-
-  //   const session = await EncryptedStorage.getItem("user_session")
-  //   if (session != null) {
-  //     if (Platform.OS == "android") {
-  //       try {
-  //         const offNotification = await fetch(BASE_URL + '/notifiaction/logoutNotification', {
-  //           method: 'POST',
-  //           headers: {
-  //             Authorization: `Bearer ${session}`,
-  //             "Content-Type": 'application/json'
-  //           },
-  //           body: JSON.stringify({
-  //             deviceToken: mobileToken
-  //           })
-  //         })
-  //         console.log("logout clicked in student side");
-  //         const response = await offNotification.json()
-  //         // console.log("response::",response);
-
-  //         if (response.flag == 1) {
-  //           console.log('logout success');
-  //           await EncryptedStorage.removeItem('user_session')
-  //           await EncryptedStorage.removeItem('clickTime')
-  //           setIsLoggedin(false)
-  //           setUserType('')
-  //         } else {
-  //           console.log("Logout Failed");
-  //           submitModel(ALERT_TYPE.DANGER, "Network Error", `${response['message']}`)
-  //         }
-  //       } catch (error) {
-  //         submitModel(ALERT_TYPE.DANGER, "Oops!!!", `Something went wrong.`)
-  //         console.log(error);
-  //       }
-  //     }else{
-  //       console.log('logout success ios');
-  //       await EncryptedStorage.removeItem('user_session')
-  //       await EncryptedStorage.removeItem('clickTime')
-  //       setIsLoggedin(false)
-  //       setUserType('')
-  //     }
-  //   }
-  // }
 
   const removeSession = async () => {
     const session = await EncryptedStorage.getItem("user_session");
     if (!session) return;
     console.log("removeSessionremoveSession::");
-    
+
 
     try {
       if (mobileToken) {
@@ -151,25 +132,54 @@ const StudentDashboard = () => {
   const menuOptions = [
     { path: 'Account', title: 'Profile' },
     { path: 'ApplyIdCard', title: 'ID/Smart Card' },
-    { path: 'ApplyBusPass', title: 'Bus Pass' },
     { path: 'ChangePassword', title: 'Change Password' },
+    { path: 'BusPassDetails', title: 'Bus Pass'},
+    { path: 'FeePayment', title: 'Pay Fees'},
   ]
+
+  const getMenuIcon = (title) => {
+  switch (title) {
+    case 'Profile':
+      return <FeatherIcon name="user" size={18} color="#333" />;
+    case 'ID/Smart Card':
+      return <FeatherIcon name="credit-card" size={18} color="#333" />;
+    case 'Change Password':
+      return <FeatherIcon name="lock" size={18} color="#333" />;
+    case 'Bus Pass':
+      return <Ionicons name="bus-outline" size={18} color="#000" />
+    case 'Pay Fees':
+      return <Ionicons name="cash-outline" size={18} color="#000" />
+    default:
+      return <FeatherIcon name="circle" size={18} color="#333" />;
+  }
+};
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+};
+
+const formatName = (name) => {
+  return name
+    ?.toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
   const menuOptionSelect = (nav) => {
     navigation.navigate(nav)
     closeMenu()
   }
-  const closeMenu = () => {
-    console.log('cls');
-    setMenuVisible(false);
-  };
 
   function getHeaderTitle(routeName) {
     switch (routeName) {
       case 'Home': return 'Dashboard';
+      case 'Fees': return 'Fees';
       case 'Examination': return 'Examination';
       case 'Academics': return 'Academics';
-      case 'Fees': return 'Fees';
       default: return 'Dashboard';
     }
   }
@@ -178,6 +188,7 @@ const StudentDashboard = () => {
       <Drawer.Navigator
         screenOptions={{
           headerShown: true,
+          swipeEnabled: false,
           headerLeft: () => (
             <TouchableOpacity>
               {/* <PaperProvider> */}
@@ -189,83 +200,13 @@ const StudentDashboard = () => {
                   }
                 }
               >
-                <Button onPress={() => setMenuVisible(!menuVisible)}>
+                <Button onPress={() => openMenu()}>
                   <FeatherIcon
-                    name={menuVisible ? 'x' : 'menu'}
+                    name= 'menu'
                     size={24}
                     color="black"
                   />
                 </Button>
-                {/* <Menu
-                  contentStyle={{ backgroundColor: 'white' }}
-                  style={
-                    Platform.OS === 'ios'
-                      ? {
-                          position: 'absolute',
-                          top: 36,
-                          right: 10,
-                          width: screenWidth / 2,
-                          // zIndex: 100,
-                        }
-                      : { width: screenWidth / 2, top: '50' }
-                  }
-                  visible={menuVisible}
-                  // onDismiss={closeMenu}
-                  dismissable={false}
-                  anchorPosition="bottom"
-                  anchor={
-                    <Button onPress={()=>setMenuVisible(!menuVisible)}>
-                      <FeatherIcon
-                        name={menuVisible ? 'x' : 'menu'}
-                        size={24}
-                        color="black"
-                      />
-                    </Button>
-                  }
-                >
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('Account')}
-                    titleStyle={{ color: 'black' }}
-                    title="Profile"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('Examination')}
-                    titleStyle={{ color: 'black' }}
-                    title="Examination"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('Academics')}
-                    titleStyle={{ color: 'black' }}
-                    title="Academics"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('ApplyIdCard')}
-                    titleStyle={{ color: 'black' }}
-                    title="ID/Smart Card"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('ApplyBusPass')}
-                    titleStyle={{ color: 'black' }}
-                    title="Bus Pass"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => menuOptionSelect('ChangePassword')}
-                    titleStyle={{ color: 'black' }}
-                    title="Change Password"
-                  />
-                  <Divider />
-                  <Menu.Item
-                    onPress={() => removeSession()}
-                    title="Logout"
-                    titleStyle={{ color: 'red', fontWeight: '600' }}
-                  />
-                </Menu> */}
-
               </View>
               {/* </PaperProvider> */}
             </TouchableOpacity>
@@ -313,52 +254,137 @@ const StudentDashboard = () => {
         />
       </Drawer.Navigator>
 
-      {/* ✅ Overlay to detect outside press */}
       {menuVisible && (
-        <Modal transparent animationType="fade" visible={menuVisible}>
-          <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0)',
-            }}
-            onPress={closeMenu}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              top: Platform.OS == 'ios' ? 100 : 50,
-              left: 10,
-              backgroundColor: 'white',
-              borderRadius: 4,
-              elevation: 5,
-              width: screenWidth / 2,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-            }}
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          }}
+        >
+
+          {/* 🔥 Overlay */}
+          <Animated.View
+            style={[
+              {
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+              },
+              overlayStyle,
+            ]}
           >
+            <Pressable style={{ flex: 1 }} onPress={closeMenu} />
+          </Animated.View>
+
+          {/* 🔥 Sliding Sidebar */}
+          <Animated.View
+            style={[
+              {
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: screenWidth * 0.75,
+                backgroundColor: '#fff',
+                borderTopRightRadius: 20,
+                borderBottomRightRadius: 20,
+                paddingTop: Platform.OS === 'ios' ? 60 : 40,
+                paddingHorizontal: 16,
+                elevation: 12,
+                shadowColor: '#000',
+                shadowOpacity: 0.2,
+                shadowRadius: 12,
+              },
+              drawerStyle,
+            ]}
+          >
+
+            {/* 🔥 Header */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#111' }}>
+                {formatName(data.data[0]['StudentName'])}
+              </Text>
+              <Text style={{ fontSize: 14, color: '#666', marginTop: 4 }}>
+                {data.data[0]['ClassRollNo']}
+              </Text>
+            </View>
+
+            {/* 🔥 Menu Items */}
             {menuOptions.map((item, i) => (
               <TouchableOpacity
                 key={i}
-                onPress={() => menuOptionSelect(item.path)}
-                style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderColor: '#C4C4C4', paddingLeft: 12 }}
+                onPress={() => {
+                  closeMenu();
+                  setTimeout(() => menuOptionSelect(item.path), 200);
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 14,
+                  paddingHorizontal: 12,
+                  borderRadius: 12,
+                  marginBottom: 6,
+                }}
               >
-                <Text style={{ color: '	#3b444b', fontSize: 16 }}>
+
+                {/* Icon */}
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    backgroundColor: '#f1f5f9',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: 12,
+                  }}
+                >
+                  {getMenuIcon(item.title)}
+                </View>
+
+                {/* Text */}
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '500' }}>
                   {item.title}
                 </Text>
+
               </TouchableOpacity>
             ))}
+
+            {/* Divider */}
+            <View
+              style={{
+                height: 1,
+                backgroundColor: '#eee',
+                marginVertical: 12,
+              }}
+            />
+
+            {/* 🔥 Logout */}
             <TouchableOpacity
-              onPress={() => removeSession()}
-              style={{ paddingVertical: 12, borderBottomWidth: 0.5, borderColor: '#C4C4C4', paddingLeft: 12 }}
+              onPress={removeSession}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: '#fff1f2',
+              }}
             >
-              <Text style={{ color: 'red', fontSize: 16 }}>
+              <FeatherIcon name="log-out" size={18} color="#ef4444" />
+              <Text style={{ marginLeft: 10, color: '#ef4444', fontWeight: '600' }}>
                 Logout
               </Text>
             </TouchableOpacity>
-          </View>
-        </Modal>
+
+          </Animated.View>
+
+        </View>
       )}
     </View>
   );

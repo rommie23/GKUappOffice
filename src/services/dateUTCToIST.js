@@ -50,4 +50,20 @@ function formatIndianNumber(amount) {
   return number.length > 1 ? formatted + '.' + number[1] : formatted;
 }
 
-export {convertUTCToIST, formatIndianNumber};
+const convertUTCToISTComplaintUse = (dateString) => {
+    const date = new Date(dateString);
+
+    const dd = String(date.getUTCDate()).padStart(2, '0');
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = date.getUTCFullYear();
+
+    let hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+
+    return `${dd}-${mm}-${yyyy} ${hours}:${minutes} ${ampm}`;
+};
+
+export {convertUTCToIST, formatIndianNumber, convertUTCToISTComplaintUse};

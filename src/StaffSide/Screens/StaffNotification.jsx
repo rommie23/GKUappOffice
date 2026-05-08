@@ -39,7 +39,8 @@ const StaffNotification = () => {
         })
   
         const response = await res.json()
-  
+        // console.log("allNotification:::",response);
+        
         if (pageNumber === 1) {
           setAllNotifications(response)
         } else {

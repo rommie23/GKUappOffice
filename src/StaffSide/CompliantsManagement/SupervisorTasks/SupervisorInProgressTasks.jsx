@@ -6,8 +6,9 @@ import colors from '../../../colors';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
 import { StudentContext } from '../../../context/StudentContext';
 import axios from 'axios';
-import {convertUTCToIST} from '../../../services/dateUTCToIST'
+import {convertUTCToISTComplaintUse} from '../../../services/dateUTCToIST'
 import { useNavigation } from '@react-navigation/native';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 const screenWidth = Dimensions.get("window").width
 const screenHeight = Dimensions.get("window").height
@@ -22,8 +23,16 @@ const SupervisorInProgressTasks = () => {
 
   const assignedTasks = async () => {
     setLoading(true)
+    const session = await EncryptedStorage.getItem("user_session")
+    if (!session) return;
     try {
-      const response = await axios.post(`${LIMS_URL}/complain/onGoingTask`, { StaffIDNo })
+      const response = await axios.post(`${BASE_URL}/complain/onGoingTask`,
+        {},
+        {
+          headers:{
+            Authorization : `Bearer ${session}`
+          }
+        })
       const inProgressTasksData = response.data;
       setComplainData(inProgressTasksData)
       // console.log("inProgressTasksData :",inProgressTasksData);
@@ -88,7 +97,7 @@ const SupervisorInProgressTasks = () => {
                   <View style={styles.transaction}>
                     <View style={{ width: '50%' }}>
                       <Text style={[styles.textSmall]}>Complaint Date/Time</Text>
-                      <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(item['created_at'])}</Text>
+                      <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToISTComplaintUse(item['CreatedDate'])}</Text>
                     </View>
                     <View style={{ width: '30%' }}>
                       <Text style={[styles.textSmall]}>Category</Text>
@@ -103,7 +112,7 @@ const SupervisorInProgressTasks = () => {
                     <View style={{ width: '30%' }}>
                       <Text style={styles.textSmall}>Assigned To</Text>
                       <Text style={[styles.textStyle]}>{`${item['assingnedTo']}`.trim()}</Text>
-                      <Text style={[styles.textStyle]}>{`(${item['user_id']})`}</Text>
+                      <Text style={[styles.textStyle]}>{`(${item['UserID']})`}</Text>
                     </View>
                   </View>
                   <View style={styles.transaction}>

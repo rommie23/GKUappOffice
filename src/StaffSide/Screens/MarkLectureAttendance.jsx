@@ -28,6 +28,8 @@ const MarkLectureAttendance = ({ route }) => {
     // console.log('inside attendance mark :::', lecture, selectedGroup, order);
 
     const studentsinLecture = async () => {
+        console.log("studentsinLecturestudentsinLecture");
+        
         const session = await EncryptedStorage.getItem("user_session")
         if (session != null) {
             try {
@@ -36,7 +38,19 @@ const MarkLectureAttendance = ({ route }) => {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${session}`
-                    }
+                    },
+                    body: JSON.stringify({
+                       order : order, 
+                       sGroup: selectedGroup, 
+                       collegeId : lecture.CollegeID, 
+                       courseId: lecture.CourseID, 
+                       semId: lecture.SemesterID, 
+                       batch : lecture.Batch, 
+                       subjectCode: lecture.SubjectCode, 
+                       examination: lecture.Examination, 
+                       section: lecture.Section, 
+                       cGroup : lecture.GroupName
+                    })
                 })
                 const studentDetails = await students.json()
                 console.log('Class Data is ::::::', studentDetails);

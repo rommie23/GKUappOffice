@@ -100,12 +100,9 @@ const Login = () => {
                 setData(result)
                 setUserType('staff')
                 try {
-                    await EncryptedStorage.setItem(
-                        "user_session",
-                        result['token']
-
-                    )
-                    setIsLoggedin(false)
+                    await EncryptedStorage.setItem( "user_session", result['token'])
+                    await EncryptedStorage.setItem("user_type", "Staff");
+                    setIsLoggedin(true)
                 } catch (error) {
                     console.log('storage error loginFile', error);
                 }
@@ -132,7 +129,7 @@ const Login = () => {
         }
     }
 
-    ///////////////////////////// modal appears when something went wrong ///////////////////////////
+    ///////////////////////////// modals /////////////////
     const errorModel = (type, title, message) => {
         Dialog.show({
             type: type,

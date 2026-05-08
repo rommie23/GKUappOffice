@@ -43,7 +43,7 @@ const Receipts = () => {
           // setShowModal2(true)
         }
         setReceipts(ReceiptsDetailData.data)
-        console.log('data froms api receipts', ReceiptsDetailData)
+        // console.log('data froms api receipts', ReceiptsDetailData)
         setLoading(false)
       } catch (error) {
         console.log('Error fetching receipts data:receipts:', error)
@@ -146,13 +146,6 @@ const Receipts = () => {
                           font-size: 12px;
                           margin-top: 4px;
                       }
-                      .boxLine{
-                          display: flex;
-                          align-items: center;
-                          justify-content: space-between;
-                          padding: 0 100px;
-                          margin-top: 32px;
-                      }
                       .leftSideBox{
                           height: 35px;
                           width: 20%;
@@ -174,10 +167,44 @@ const Receipts = () => {
                           display: flex;
                       }
                       .eachLineRight .leftSide{
-                        width:30%
-                      }
-        
+                        width:30%;
+                      },
+
                       
+                      .table-container {
+                        margin-left: 20px;
+                      },
+                      .table {
+                        border: 2px solid #000;
+                      }
+                      .row {
+                        display: flex;
+                        width: 100%;
+                      }
+                      .cell {
+                        padding: 10px;
+                        border: 1px solid #000;
+                        box-sizing: border-box;
+                        white-space: normal;
+                        word-break: break-word;
+                        overflow-wrap: break-word;
+                      }
+                      .col1 {
+                        width: 10%;
+                      }
+                      .col2 {
+                        width: 70%;
+                      }
+                      .col3 {
+                        width: 20%;
+                      }
+                      .center {
+                        text-align: center;
+                      }
+                      .right {
+                        text-align: right;
+                      }
+
                   </style>
               </head>
               <body>
@@ -196,13 +223,12 @@ const Receipts = () => {
                               <p class="rightSide">${eachReciept[0]['ReceiptNo']}</p>
                           </div>
                           <div class="eachLineRightTop">
-                              <p class="leftSide">Date :</p>
-                              <p class="rightSide">${(JSON.stringify(eachReciept[0]['DateEntry']).slice(1, 11)).split("-").reverse().join("-")}</p>
+                              <p class="rightSide">Date: ${(JSON.stringify(eachReciept[0]['DateEntry'])?.slice(1, 11)).split("-").reverse().join("-")}</p>
                           </div>
                       </div>
                       <div class="eachLine">
                           <p class="leftSide">Received From</p>
-                          <p class="rightSide">${eachReciept[0]['StudentName']}/${eachReciept[0]['FatherName']}</p>
+                          <p class="rightSide">${eachReciept[0]['StudentName']}${eachReciept[0]['SEX'] == 'Male' ? ' S/O ' : ' D/O '}${eachReciept[0]['FatherName']}</p>
                       </div>
                       <div class="eachLine">
                           <p class="leftSide">Course</p>
@@ -214,7 +240,7 @@ const Receipts = () => {
                               <p class="rightSide">${eachReciept[0]['Batch']}</p>
                           </div>
                           <div class="eachLineRight">
-                              <p class="leftSide">Installment:</p>
+                              <p class="leftSide">Semester:</p>
                               <p class="rightSide">${eachReciept[0]['Semester']}</p>
                           </div>
                       </div>
@@ -228,18 +254,43 @@ const Receipts = () => {
                               <p class="rightSide">${eachReciept[0]['IDNo']} </p>
                           </div>
                       </div>
-        
+
+                      <div class="eachLine">
+                          <p class="leftSide">On Account Of</p>
+                          <p class="rightSide">${eachReciept[0]['OnAccountof']} (${eachReciept[0]['ModeOfPayment']})</p>
+                      </div>
+
+                      <br/>
+                      <!-- Table -->
+
+                      <div class="table-container">
+                        <div class="table">
+                          <div class="row header">
+                            <div class="cell col1">S. No.</div>
+                            <div class="cell col2">Particulars</div>
+                            <div class="cell col3">Amount</div>
+                          </div>
+                          <div class="row">
+                            <div class="cell col1 center">1</div>
+                            <div class="cell col2">
+                              <b>Reference No.:</b>${eachReciept[0]['ReferenceNumber']}<br>
+                              <b>Date:</b> ${eachReciept[0]['ChequeDraftDate'].split("T")[0]}
+                            </div>
+                            <div class="cell col3 center">${eachReciept[0]['credit']}</div>
+                          </div>
+
+                          <div class="row">
+                            <div class="cell col1"></div>
+                            <div class="cell col2 right"><b>Total:</b></div>
+                            <div class="cell col3 center"><b>Rs. ${eachReciept[0]['credit']}/-</b></div>
+                          </div>
+
+                        </div>
+                      </div>
+                      <br/>
                       <div class="eachLine">
                           <p class="leftSide">Rs (In Words)</p>
                           <p class="rightSide">${converter.toWords(eachReciept[0]['credit'])}</p>
-                      </div>
-                      <div class="eachLine">
-                          <p class="leftSide">On Account Of</p>
-                          <p class="rightSide">${eachReciept[0]['OnAccountof']}</p>
-                      </div>
-                      <div class="boxLine">
-                          <div class="leftSideBox">Rs. ${eachReciept[0]['credit']}</div>
-                          <div class="rightSideBox"><p class="smallText">Signature</p></div>
                       </div>
                   </div>
                   <br>

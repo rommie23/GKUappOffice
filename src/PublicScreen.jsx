@@ -44,42 +44,7 @@ const PublicScreen = ({ navigation }) => {
       };
     }, [])
   );
-  console.log("BASE_URL :: ", BASE_URL);
-
-
-  const getUserType = async () => {
-    const session = await EncryptedStorage.getItem("user_session")
-    setIsLoading(true)
-    console.log(session);
-    if (session != null) {
-      try {
-        const userTypeData = await fetch(`${BASE_URL}/staff/status`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session}`
-          }
-        })
-        const myUserTypeData = await userTypeData.json()
-        setUserType(myUserTypeData['data'][0]['LoginType'])
-        // console.log(myUserTypeData['data'][0]['LoginType']);
-        setIsLoggedin(true)
-        setIsLoading(false)
-        // console.log('data in state variable',userTypeData['data'][0]['LoginType'])
-      } catch (error) {
-        console.log('Error fetching myusertype APi :PublicScreen:', error)
-        newModel(ALERT_TYPE.DANGER, "Oops!!!", "Something went worng!");
-        // setShowModal(true)
-        setIsLoading(false)
-      }
-    }
-    setIsLoading(false)
-  }
-  console.log(isloading);
-
-  useEffect(() => {
-    getUserType()
-    // removeSession()
-  }, [hasInternet])
+  // console.log("BASE_URL :: ", BASE_URL);
 
   const newModel = (type, title, message) => {
     Dialog.show({
@@ -88,16 +53,6 @@ const PublicScreen = ({ navigation }) => {
       textBody: message,
       button: 'close',
     })
-  }
-
-  const removeSession = async () => {
-    try {
-      await EncryptedStorage.removeItem('user_session')
-      // navigation.navigate('Login')
-      setIsLoggedin(false)
-    } catch (error) {
-      console.log('Error in sessionDestroy StudentHome:', error);
-    }
   }
 
   useEffect(() => {

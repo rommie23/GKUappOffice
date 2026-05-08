@@ -32,13 +32,12 @@ const Category = ({ navigation }) => {
       };
     }, [])
   );
-  console.log("BASE_URL :: ", BASE_URL);
+  // console.log("BASE_URL :: ", BASE_URL);
 
 
   const getUserType = async () => {
     const session = await EncryptedStorage.getItem("user_session")
     setIsLoading(true)
-    console.log(session);
     if (session != null) {
       try {
         const userTypeData = await fetch(`${BASE_URL}/staff/status`, {
@@ -49,24 +48,19 @@ const Category = ({ navigation }) => {
         })
         const myUserTypeData = await userTypeData.json()
         setUserType(myUserTypeData['data'][0]['LoginType'])
-        // console.log(myUserTypeData['data'][0]['LoginType']);
         setIsLoggedin(true)
         setIsLoading(false)
-        // console.log('data in state variable',userTypeData['data'][0]['LoginType'])
       } catch (error) {
-        console.log('Error fetching myusertype APi :category:', error)
+        // console.log('Error fetching myusertype APi :category:', error)
         newModel(ALERT_TYPE.DANGER, "Oops!!!", "Something went worng!");
-        // setShowModal(true)
         setIsLoading(false)
       }
     }
     setIsLoading(false)
   }
-  console.log(isloading);
 
   useEffect(() => {
     getUserType()
-    // removeSession()
   }, [hasInternet])
 
   const newModel = (type, title, message) => {
@@ -76,16 +70,6 @@ const Category = ({ navigation }) => {
       textBody: message,
       button: 'close',
     })
-  }
-
-  const removeSession = async () => {
-    try {
-      await EncryptedStorage.removeItem('user_session')
-      // navigation.navigate('Login')
-      setIsLoggedin(false)
-    } catch (error) {
-      console.log('Error in sessionDestroy StudentHome:', error);
-    }
   }
 
   useEffect(() => {

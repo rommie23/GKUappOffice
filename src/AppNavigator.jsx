@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import Login from './StudentSide/screens/Login'
 // import Splash from './StudentSide/screens/Splash'
@@ -71,6 +71,7 @@ import TrackMovement from './StaffSide/Movement/TrackMovement'
 import CheckMovements from './StaffSide/Movement/CheckMovements'
 import CorrectionRequestFileView from './StudentSide/screens/profile/CorrectionRequestFileView'
 import MyLeaves from './StaffSide/Leaves/MyLeaves/MyLeaves'
+import SubmitReportScreen from './StaffSide/Leaves/MyLeaves/SubmitReportScreen'
 import SupervisorLeaves from './StaffSide/Leaves/SupervisorLeaves/SupervisorLeaves'
 import ChangePassword from './StudentSide/screens/ChangePassword'
 import FeePayment from './StudentSide/screens/fees/FeePayment'
@@ -137,17 +138,109 @@ import ApproveNodues from './StaffSide/NoDues/ApproveNodues'
 import TrackNoDues from './StaffSide/NoDues/TrackNoDues'
 import ScanqrScreen from './StaffSide/VerifyStudent/ScanqrScreen'
 import NotificationDisplay from './StaffSide/Screens/NotificationDisplay'
+import BusPassDetails from './StudentSide/screens/BusService/BusPassDetails'
+import BusFeePay from './StudentSide/screens/BusService/BusFeePay'
+import { ActivityIndicator } from 'react-native-paper'
+import { BASE_URL } from '@env';
 
 
 const Stack = createStackNavigator()
-
-
 const AppNavigator = () => {
 
-  const { isLoggedin, userType, StaffIDNo, studentIDNo} = useContext(StudentContext)
+  const { isLoggedin, setIsLoggedin, userType, setUserType, StaffIDNo, studentIDNo, blocked, setBlocked, mobileToken } = useContext(StudentContext)
+  const [checking, setChecking] = useState(true);
+
+  // const checkSession = async () => {
+  //   const currentUserType = await EncryptedStorage.getItem("user_type")
+  //   console.log("currentUserType", currentUserType);
+  //   setUserType(currentUserType.toString())
+  //   const session = await EncryptedStorage.getItem("user_session")
+  //   if (session) {
+  //     setIsLoggedin(true)
+  //   }
+  // }
+
   const checkSession = async () => {
-    const session = await EncryptedStorage.getItem("user_session")
-    return session
+  try {
+    const token = await EncryptedStorage.getItem("user_session");
+    const userType = await EncryptedStorage.getItem("user_type");
+    console.log({userType});
+    
+    if (token) {
+      if (!userType) {
+        // 🚨 old user → force clean logout (no API)
+        await clearLocalSession();
+        return;
+      }
+
+      setIsLoggedin(true);
+      setUserType(userType);
+    }
+  } catch (error) {
+    console.log("checkSession error:", error);
+  } finally {
+    setChecking(false);
+  }
+};
+
+  const clearLocalSession = async () => {
+  await EncryptedStorage.removeItem('user_session');
+  await EncryptedStorage.removeItem('user_type');
+
+  setIsLoggedin(false);
+  setUserType(null);
+};
+
+
+  const checkRestriction = async () => {
+    try {
+      const session = await EncryptedStorage.getItem("user_session");
+      if (!session) return;
+      const res = await fetch(`${BASE_URL}/staff/checkUserRestrictions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session}`,
+          Accept: "application/json",
+          'Content-Type': "application/json"
+        }
+      });
+
+      const data = await res.json();
+
+      console.log("checkRestriction", data);
+
+      if (data.blocked) {
+        setBlocked(true);
+
+      } else {
+        setBlocked(false);
+      }
+
+    } catch (err) {
+      console.log("Restriction check error:", err);
+    } finally {
+      setChecking(false);
+    }
+  };
+  useEffect(() => {
+    checkSession();
+    // checkRestriction();
+  }, [])
+
+  useEffect(() => {
+    if (userType === 'Staff') {
+      checkRestriction();
+    } else {
+      setChecking(false); // 👈 IMPORTANT (students skip restriction)
+    }
+  }, [userType]);
+
+  if (checking) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
   return (
     <NavigationContainer>
@@ -160,7 +253,7 @@ const AppNavigator = () => {
           !isLoggedin ?
             <>
               <Stack.Screen name='PublicScreen' component={PublicScreen} options={{ headerShown: false, title: "Back" }} />
-              <Stack.Screen name='AboutUniversity' component={AboutUniversity} options={{ headerShown: true, title:'About University' }} />
+              <Stack.Screen name='AboutUniversity' component={AboutUniversity} options={{ headerShown: true, title: 'About University' }} />
               <Stack.Screen name='LifeAtGKU' component={LifeAtGKU} options={{ headerShown: true }} />
               <Stack.Screen name='Category' component={Category} options={{ headerShown: false }} />
               <Stack.Screen name='Admissions' component={AdmissionsScreen} options={{ headerShown: true }} />
@@ -172,72 +265,77 @@ const AppNavigator = () => {
               <Stack.Screen name='PasswordForgot' component={PasswordForgot} options={{ headerShown: true, title: 'Forgot Password', }} />
               <Stack.Screen name='ForgotPassword' component={ForgotPassword} options={{ headerShown: true, title: 'Forgot Password', }} />
             </> :
-            isLoggedin && userType == 'Student' ?
-              <>
-                <Stack.Screen name='StudentDashboard' component={StudentDashboard} options={{ headerShown: false, title: 'Dashboard' }} />
-                <Stack.Screen name='Account' component={StudentProfile} options={{ headerShown: true, title: 'Profile' }} />
-                <Stack.Screen name='StudentLibrary' component={StudentLibrary} options={{ headerShown: true, title: 'Library' }} />
-                <Stack.Screen name='Notice' component={Notice} options={{ headerShown: true, title: "All Notices" }} />
-                <Stack.Screen name='StudentBooksIssued' component={StudentBooksIssued} options={{ headerShown: true, title: 'Issued Books' }} />
-                <Stack.Screen name='BooksFineDetails' component={BooksFineDetails} options={{ headerShown: true, title: 'Books Fine Details' }} />
-                <Stack.Screen name='BookSearch' component={BookSearch} options={{ headerShown: true, title: "Search Books" }} />
-                <Stack.Screen name='StudentGrievance' component={StudentGrievance} options={{ headerShown: true, title: "Student Grievance" }} />
-                <Stack.Screen name='GrievanceForm' component={GrievanceForm} options={{ headerShown: true, title: "Grievance Form" }} />
-                <Stack.Screen name='TrackGrievance' component={TrackGrievance} options={{ headerShown: true, title: "Track Grievance" }} />
-                <Stack.Screen name='GrievanceRequestFile' component={GrievanceAttachmentView} options={{ headerShown: true, title: "Grievance File" }} />
-                <Stack.Screen name='StudentElectricityBill' component={StudentElectricityBills} options={{ headerShown: true, title: "Electricity Bill" }} />
-                <Stack.Screen name='StudentLeaves' component={StudentLeaves} options={{ headerShown: true, title: "Leaves" }} />
-                <Stack.Screen name='StudentStudyMaterial' component={StudentStudyMaterial} options={{ headerShown: true, title: 'Study Material' }} />
-                <Stack.Screen name='StudentStudyMaterialPdf' component={StudentStudyMaterialPdf} options={{ headerShown: true, title: "Study Material" }} />
-                <Stack.Screen name='StudentSyllabus' component={StudentSyllabus} options={{ headerShown: true, title: 'Syllabus' }} />
-                <Stack.Screen name='StudentAssignments' component={StudentAssignments} options={{ headerShown: true, title: 'Assignments' }} />
-                <Stack.Screen name='Examination Form' component={ExamForm} options={{ headerShown: true, title: 'Examination Form' }} />
-                <Stack.Screen name='ExaminationFormPhd' component={ExamFormPhd} options={{ headerShown: true, title: 'Exam Form' }} />
-                <Stack.Screen name='ExamFormAgricultureDiploma' component={ExamFormAgricultureDiploma} options={{ headerShown: true, title: 'Exam Form' }} />
-                <Stack.Screen name='Reappear Form' component={ReappearForm} options={{ headerShown: true }} />
-                <Stack.Screen name='ReappearFormAgricultureDiploma' component={ReappearFormAgricultureDiploma} options={{ headerShown: true, title: "Reappear Form" }} />
-                <Stack.Screen name='ReappearFormPhd' component={ReappearFormPhd} options={{ headerShown: true, title: "Reappear Form" }} />
-                <Stack.Screen name='Result' component={StudentResult} options={{ headerShown: true, title: 'All Results' }} />
-                <Stack.Screen name='AllSubjectsSemWise' component={AllSubjectsSemWise} options={{ headerShown: true, title: 'All Subjects' }} />
-                <Stack.Screen name='MyForms' component={MyForms} options={{ headerShown: true, title: 'Previous Exam Forms' }} />
-                <Stack.Screen name='StudentFilledExamForm' component={StudentFilledExamForm} options={{ headerShown: true, title: 'My Exam Forms' }} />
-                <Stack.Screen name='CGPA Calculator' component={CgpaCalculator} options={{ headerShown: true }} />
-                <Stack.Screen name='AdmitCard' component={AdmitCard} options={{ headerShown: true, title: "Admit Card" }} />
-                <Stack.Screen name='FeePayment' component={FeePayment} options={{ headerShown: true, title: "Fees Payment" }} />
-                <Stack.Screen name='paymentConfirmation' component={FeePaymentConfirmation} options={{ headerShown: true, title: "Payment Confirmation" }} />
-                <Stack.Screen name='ConfirmPayment' component={ConfirmPayment} options={{ headerShown: true, title: "Confirm Payment" }} />
-                <Stack.Screen name='PayFeeScreen' component={PayFeeScreen} options={{ headerShown: true, title: "Pay Fee" }} />
-                <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} options={{ headerShown: true, title: "Payment Success" }} />
-                <Stack.Screen name='PaymentFailureScreen' component={PaymentFailureScreen} options={{ headerShown: true, title: "Payment Failed" }} />
-                <Stack.Screen name='Receipts' component={Receipts} options={{ headerShown: true }} />
-                <Stack.Screen name='RecentTransactions' component={RecentTransactions} options={{ headerShown: true }} />
-                <Stack.Screen name='StudentProfileUpdate' component={StudentProfileUpdate} options={{ headerShown: true, title: "Student Profile Update" }} />
-                <Stack.Screen name='StudentDetailsCorrection' component={StudentDetailsCorrection} options={{ headerShown: true, title: 'Details' }} />
-                <Stack.Screen name='StudentAttendance' component={StudentAttendance} options={{ headerShown: true, title: 'Attendance' }} />
-                <Stack.Screen name='ApplyForDocuments' component={ApplyForDocuments} options={{ headerShown: true, title: "Apply Documents" }} />
-                <Stack.Screen name='ApplyDocumentsForm' component={ApplyDocumentsForm} options={{ headerShown: true, title: "Apply Documents Form" }} />
-                <Stack.Screen name='TrackApplyDocument' component={TrackApplyDocument} options={{ headerShown: true, title: "Track Apply Document" }} />
-                <Stack.Screen name='TrackEachRequest' component={TrackEachRequest} options={{ headerShown: true, title: "Track  Request" }} />
-                <Stack.Screen name='ViewAttachedDocument' component={ViewAttachedDocument} options={{ headerShown: true, title: "Attached Document" }} />
-                <Stack.Screen name='MyCertificates' component={MyCertificates} options={{ headerShown: true, title: "MyCertificates" }} />
-                <Stack.Screen name='CertificateViewer' component={CertificateViewer} options={{ headerShown: true, title: "Certificate" }} />
-                <Stack.Screen name='ViewAppeal' component={ViewCorrectionRequest} options={{ headerShown: true, title: 'View Appeal' }} />
-                <Stack.Screen name='CorrectionRequestFileView' component={CorrectionRequestFileView} options={{ headerShown: false }} />
-                <Stack.Screen name='ApplyIdCard' component={ApplyIdCard} options={{ headerShown: true, title: 'Apply Id Card' }} />
-                <Stack.Screen name='ApplyBusPass' component={ApplyBusPass} options={{ headerShown: true, title: 'Apply Bus Pass' }} />
-                <Stack.Screen name='PendingAdmitCardData' component={PendingAdmitCardData} options={{ headerShown: true, title: "Pending Admit Card" }} />
-                <Stack.Screen name='ChangePassword' component={ChangePassword} options={{ headerShown: true, title: "Change Password" }} />
-                <Stack.Screen name='StudentSemesterResult' component={StudentSemesterResult} options={{ headerShown: true, title: 'Result' }} />
-                <Stack.Screen name='EachReceipt' component={EachReceipt} options={{ headerShown: true, title: 'Receipt' }} />
-                <Stack.Screen name='EachAdmitCard' component={EachAdmitCard} options={{ headerShown: true, title: "Semester Admit Card" }} />
-                <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: "Notifications" }} />
-                <Stack.Screen name='FeedbackForm' component={FeedbackFrom} options={{ headerShown: false, title: "Feedback" }} />
-                <Stack.Screen name='Convocation' component={Convocation} options={{ headerShown: true, title: "Convocation" }} />
-                <Stack.Screen name='ConvocationFeePay' component={ConvocationFeePay} options={{ headerShown: true, title: "Fee pay for Convocation" }} />
-                <Stack.Screen name="MessagesRoot" options={{ headerShown: false }}>
-                  {() => <MessagesRoot studentIDNo={studentIDNo} />}
-                </Stack.Screen>
-                {/* <Stack.Screen name='DateSheet' component={DateSheet} options={{ headerShown: true, title: 'Date Sheet' }} />
+            isLoggedin && blocked && userType == 'Staff' ?
+              <Stack.Screen name='SubmitReportScreen' component={SubmitReportScreen} options={{ headerShown: true, title: ' Upload Report' }} />
+              :
+              isLoggedin && userType == 'Student' ?
+                <>
+                  <Stack.Screen name='StudentDashboard' component={StudentDashboard} options={{ headerShown: false, title: 'Dashboard' }} />
+                  <Stack.Screen name='Account' component={StudentProfile} options={{ headerShown: true, title: 'Profile' }} />
+                  <Stack.Screen name='StudentLibrary' component={StudentLibrary} options={{ headerShown: true, title: 'Library' }} />
+                  <Stack.Screen name='Notice' component={Notice} options={{ headerShown: true, title: "All Notices" }} />
+                  <Stack.Screen name='StudentBooksIssued' component={StudentBooksIssued} options={{ headerShown: true, title: 'Issued Books' }} />
+                  <Stack.Screen name='BooksFineDetails' component={BooksFineDetails} options={{ headerShown: true, title: 'Books Fine Details' }} />
+                  <Stack.Screen name='BookSearch' component={BookSearch} options={{ headerShown: true, title: "Search Books" }} />
+                  <Stack.Screen name='StudentGrievance' component={StudentGrievance} options={{ headerShown: true, title: "Student Grievance" }} />
+                  <Stack.Screen name='GrievanceForm' component={GrievanceForm} options={{ headerShown: true, title: "Grievance Form" }} />
+                  <Stack.Screen name='TrackGrievance' component={TrackGrievance} options={{ headerShown: true, title: "Track Grievance" }} />
+                  <Stack.Screen name='GrievanceRequestFile' component={GrievanceAttachmentView} options={{ headerShown: true, title: "Grievance File" }} />
+                  <Stack.Screen name='StudentElectricityBill' component={StudentElectricityBills} options={{ headerShown: true, title: "Electricity Bill" }} />
+                  <Stack.Screen name='StudentLeaves' component={StudentLeaves} options={{ headerShown: true, title: "Leaves" }} />
+                  <Stack.Screen name='StudentStudyMaterial' component={StudentStudyMaterial} options={{ headerShown: true, title: 'Study Material' }} />
+                  <Stack.Screen name='StudentStudyMaterialPdf' component={StudentStudyMaterialPdf} options={{ headerShown: true, title: "Study Material" }} />
+                  <Stack.Screen name='StudentSyllabus' component={StudentSyllabus} options={{ headerShown: true, title: 'Syllabus' }} />
+                  <Stack.Screen name='StudentAssignments' component={StudentAssignments} options={{ headerShown: true, title: 'Assignments' }} />
+                  <Stack.Screen name='Examination Form' component={ExamForm} options={{ headerShown: true, title: 'Examination Form' }} />
+                  <Stack.Screen name='ExaminationFormPhd' component={ExamFormPhd} options={{ headerShown: true, title: 'Exam Form' }} />
+                  <Stack.Screen name='ExamFormAgricultureDiploma' component={ExamFormAgricultureDiploma} options={{ headerShown: true, title: 'Exam Form' }} />
+                  <Stack.Screen name='Reappear Form' component={ReappearForm} options={{ headerShown: true }} />
+                  <Stack.Screen name='ReappearFormAgricultureDiploma' component={ReappearFormAgricultureDiploma} options={{ headerShown: true, title: "Reappear Form" }} />
+                  <Stack.Screen name='ReappearFormPhd' component={ReappearFormPhd} options={{ headerShown: true, title: "Reappear Form" }} />
+                  <Stack.Screen name='Result' component={StudentResult} options={{ headerShown: true, title: 'All Results' }} />
+                  <Stack.Screen name='AllSubjectsSemWise' component={AllSubjectsSemWise} options={{ headerShown: true, title: 'All Subjects' }} />
+                  <Stack.Screen name='MyForms' component={MyForms} options={{ headerShown: true, title: 'Previous Exam Forms' }} />
+                  <Stack.Screen name='StudentFilledExamForm' component={StudentFilledExamForm} options={{ headerShown: true, title: 'My Exam Forms' }} />
+                  <Stack.Screen name='CGPA Calculator' component={CgpaCalculator} options={{ headerShown: true }} />
+                  <Stack.Screen name='AdmitCard' component={AdmitCard} options={{ headerShown: true, title: "Admit Card" }} />
+                  <Stack.Screen name='FeePayment' component={FeePayment} options={{ headerShown: true, title: "Fees Payment" }} />
+                  <Stack.Screen name='paymentConfirmation' component={FeePaymentConfirmation} options={{ headerShown: true, title: "Payment Confirmation" }} />
+                  <Stack.Screen name='ConfirmPayment' component={ConfirmPayment} options={{ headerShown: true, title: "Confirm Payment" }} />
+                  <Stack.Screen name='PayFeeScreen' component={PayFeeScreen} options={{ headerShown: true, title: "Pay Fee" }} />
+                  <Stack.Screen name='PaymentSuccessScreen' component={PaymentSuccessScreen} options={{ headerShown: true, title: "Payment Success" }} />
+                  <Stack.Screen name='PaymentFailureScreen' component={PaymentFailureScreen} options={{ headerShown: true, title: "Payment Failed" }} />
+                  <Stack.Screen name='Receipts' component={Receipts} options={{ headerShown: true }} />
+                  <Stack.Screen name='RecentTransactions' component={RecentTransactions} options={{ headerShown: true }} />
+                  <Stack.Screen name='StudentProfileUpdate' component={StudentProfileUpdate} options={{ headerShown: true, title: "Student Profile Update" }} />
+                  <Stack.Screen name='StudentDetailsCorrection' component={StudentDetailsCorrection} options={{ headerShown: true, title: 'Details' }} />
+                  <Stack.Screen name='StudentAttendance' component={StudentAttendance} options={{ headerShown: true, title: 'Attendance' }} />
+                  <Stack.Screen name='ApplyForDocuments' component={ApplyForDocuments} options={{ headerShown: true, title: "Apply Documents" }} />
+                  <Stack.Screen name='ApplyDocumentsForm' component={ApplyDocumentsForm} options={{ headerShown: true, title: "Apply Documents Form" }} />
+                  <Stack.Screen name='TrackApplyDocument' component={TrackApplyDocument} options={{ headerShown: true, title: "Track Apply Document" }} />
+                  <Stack.Screen name='TrackEachRequest' component={TrackEachRequest} options={{ headerShown: true, title: "Track  Request" }} />
+                  <Stack.Screen name='ViewAttachedDocument' component={ViewAttachedDocument} options={{ headerShown: true, title: "Attached Document" }} />
+                  <Stack.Screen name='MyCertificates' component={MyCertificates} options={{ headerShown: true, title: "MyCertificates" }} />
+                  <Stack.Screen name='CertificateViewer' component={CertificateViewer} options={{ headerShown: true, title: "Certificate" }} />
+                  <Stack.Screen name='ViewAppeal' component={ViewCorrectionRequest} options={{ headerShown: true, title: 'View Appeal' }} />
+                  <Stack.Screen name='CorrectionRequestFileView' component={CorrectionRequestFileView} options={{ headerShown: false }} />
+                  <Stack.Screen name='ApplyIdCard' component={ApplyIdCard} options={{ headerShown: true, title: 'Apply Id Card' }} />
+                  <Stack.Screen name='ApplyBusPass' component={ApplyBusPass} options={{ headerShown: true, title: 'Apply Bus Pass' }} />
+                  <Stack.Screen name='PendingAdmitCardData' component={PendingAdmitCardData} options={{ headerShown: true, title: "Pending Admit Card" }} />
+                  <Stack.Screen name='ChangePassword' component={ChangePassword} options={{ headerShown: true, title: "Change Password" }} />
+                  <Stack.Screen name='StudentSemesterResult' component={StudentSemesterResult} options={{ headerShown: true, title: 'Result' }} />
+                  <Stack.Screen name='EachReceipt' component={EachReceipt} options={{ headerShown: true, title: 'Receipt' }} />
+                  <Stack.Screen name='EachAdmitCard' component={EachAdmitCard} options={{ headerShown: true, title: "Semester Admit Card" }} />
+                  <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: "Notifications" }} />
+                  <Stack.Screen name='FeedbackForm' component={FeedbackFrom} options={{ headerShown: false, title: "Feedback" }} />
+                  <Stack.Screen name='Convocation' component={Convocation} options={{ headerShown: true, title: "Convocation" }} />
+                  <Stack.Screen name='BusPassDetails' component={BusPassDetails} options={{ headerShown: true, title: "Bus Pass Details" }} />
+                  <Stack.Screen name='BusFeePay' component={BusFeePay} options={{ headerShown: true, title: "Bus Fee Pay" }} />
+                  <Stack.Screen name='ConvocationFeePay' component={ConvocationFeePay} options={{ headerShown: true, title: "Fee pay for Convocation" }} />
+                  <Stack.Screen name="MessagesRoot" options={{ headerShown: false }}>
+                    {() => <MessagesRoot studentIDNo={studentIDNo} />}
+                  </Stack.Screen>
+                  {/* <Stack.Screen name='DateSheet' component={DateSheet} options={{ headerShown: true, title: 'Date Sheet' }} />
               <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: 'Notifications' }}/>
               <Stack.Screen name='StudentNoticeBoard' component={StudentNoticeBoard} options={{ headerShown: true, title: 'Notice Board'}} />
               <Stack.Screen name='MyService' component={MyService} options={{ headerShown: true, title: 'MyService'}} />
@@ -245,66 +343,67 @@ const AppNavigator = () => {
               <Stack.Screen name='OTPVerification' component={VerifyModal} options={{ headerShown: true, title: "OTP Verification"}}/>
               <Stack.Screen name='ConfirmDocumentPayment' component={ConfirmDocumentPayment} options={{ headerShown: true, title: "Confirm Payment"}}/>
               <Stack.Screen name='OpenPDF' component={OpenPDF} options={{ headerShown: true, title: "View Document"}} /> */}
-              </>
-              :
-              <>
-                <Stack.Screen name='StaffDashboard' component={HeaderTop} options={{ headerShown: false, title: 'Dashboard' }} />
-                <Stack.Screen name='StaffProfile' component={StaffProfile} options={{ headerShown: true, title: 'Profile' }} />
-                <Stack.Screen name='MyLeaves' component={MyLeaves} options={{ headerShown: true, title: 'My Leaves' }} />
-                <Stack.Screen name='ApplyLeaveForm' component={ApplyLeaveForm} options={{ headerShown: true, title: 'Apply Leave Form' }} />
-                <Stack.Screen name='ViewLeave' component={ViewLeave} options={{ headerShown: true, title: ' View Leave' }} />
-                <Stack.Screen name='ViewLeaveFile' component={ViewLeaveFile} options={{ headerShown: true, title: ' View File' }} />
-                <Stack.Screen name='SupervisorLeaves' component={SupervisorLeaves} options={{ headerShown: true, title: 'Supervisor Leaves' }} />
-                <Stack.Screen name='MyMovements' component={MyMovements} options={{ headerShown: true, title: 'My Movements' }} />
-                <Stack.Screen name='SupervisorMovements' component={SupervisorMovements} options={{ headerShown: true, title: 'Supervisor Reports' }} />
-                <Stack.Screen name='RescheduleMovement' component={MovementReschedule} options={{ headerShown: true, title: 'Reschedule' }} />
-                <Stack.Screen name='MovementRequest' component={MovementRequest} options={{ headerShown: true, title: 'Apply Movement Request' }} />
-                <Stack.Screen name='MovementPending' component={MovementPending} options={{ headerShown: true, title: 'Pending Movenment' }} />
-                <Stack.Screen name='CheckMovements' component={CheckMovements} options={{ headerShown: true, title: 'Check Movements' }} />
-                <Stack.Screen name='LibraryBooks' component={LibraryBooks} options={{ headerShown: true, title: 'Issued Books' }} />
-                <Stack.Screen name='StaffNotification' component={StaffNotification} options={{ headerShown: true, title: 'Notification' }} />
-                <Stack.Screen name='Calendar' component={Calendar} options={{ headerShown: true, title: ' Calendar' }} />
-                <Stack.Screen name='AttandancepdfDownload' component={AttandancePdf} options={{ headerShown: true, title: 'Download Summary Report' }} />
-                <Stack.Screen name='StaffTimeTable' component={StaffTimeTable} options={{ headerShown: true, title: "Today Time Table" }} />
-                <Stack.Screen name='AccountsDashboard' component={AccountsDashboard} options={{ headerShown: true, title: "Accounts" }} />
-                <Stack.Screen name='StaffProfileEdit' component={StaffEditProfile} options={{ headerShown: true, title: 'Update Profile' }} />
-                <Stack.Screen name='StaffWeeklyTimeTable' component={StaffWeeklyTimeTable} options={{ headerShown: true, title: "Weekly Time Table" }} />
-                <Stack.Screen name='TrackMovement' component={TrackMovement} options={{ headerShown: true, title: 'Track Movement' }} />
-                <Stack.Screen name='MarkAttendance' component={MarkAttendance} options={{ headerShown: true, title: "Mark Attendance" }} />
-                <Stack.Screen name='MarkLectureAttendance' component={MarkLectureAttendance} options={{ headerShown: true, title: "Mark Lecture Attendance" }} />
-                <Stack.Screen name='MovmentRegister' component={MovmentRegister} options={{ headerShown: true, title: 'Movment Register' }} />
-                <Stack.Screen name='EachLeaveForward' component={EachLeaveForward} options={{ headerShown: true, title: "Leave Confirmation" }} />
-                <Stack.Screen name='ComplaintsMainScreen' component={ComplaintsMainScreen} options={{ headerShown: true, title: "Complaints" }} />
-                <Stack.Screen name='LaunchCompaint' component={LaunchCompaint} options={{ headerShown: true, title: "Add Compaint" }} />
-                <Stack.Screen name='AllComplaints' component={AllComplaints} options={{ headerShown: true, title: "My Complaints" }} />
-                <Stack.Screen name='AcceptAndCompleteComplaint' component={AcceptAndCompleteComplaint} options={{ headerShown: true, title: "Work on Complaint" }} />
-                <Stack.Screen name='AssignTaskEach' component={AssignTaskEach} options={{ headerShown: true, title: "Assign Each Task" }} />
-                <Stack.Screen name='SupervisorTasks' component={SupervisorTasks} options={{ headerShown: true, title: "Supervisor Tasks" }} />
-                <Stack.Screen name='CompleteTaskScreen' component={CompleteTaskScreen} options={{ headerShown: true, title: "Complete Task" }} />
-                <Stack.Screen name='RejectTaskScreen' component={RejectTaskScreen} options={{ headerShown: true, title: "Reject Task" }} />
-                <Stack.Screen name='SupervisorRejectedTasks' component={SupervisorRejectedTasks} options={{ headerShown: true, title: "Rejected Tasks" }} />
-                <Stack.Screen name='OpenImage' component={OpenImage} options={{ headerShown: true, title: "View Image" }} />
-                <Stack.Screen name='OpenPDF' component={OpenPDF} options={{ headerShown: true, title: "View Document" }} />
-                <Stack.Screen name='ChangePassword' component={ChangePassword} options={{ headerShown: true, title: "Change Password" }} />
-                <Stack.Screen name='CreateNotifiaction' component={CreateNotification} options={{ headerShown: true, title: "Send Notice" }} />
-                <Stack.Screen name='Notice' component={MainNotification} options={{ headerShown: true, title: "Notifications" }} />
-                <Stack.Screen name='CreateNotice' component={CreateNotificationMain} options={{ headerShown: true, title: "Create Notice" }} />
-                <Stack.Screen name="AllChats" options={{ headerShown: false }}>
-                  {() => <ChatRoot StaffIDNo={StaffIDNo} />}
-                </Stack.Screen>
-                <Stack.Screen name='NoduesMain' component={NoduesMain} options={{ headerShown: true, title: "No Dues"}} />
-                <Stack.Screen name='ApproveNodues' component={ApproveNodues} options={{ headerShown: true, title: "Approve No Dues"}} />
-                <Stack.Screen name='TrackNoDues' component={TrackNoDues} options={{ headerShown: true, title: "Track No Dues"}} />
-                <Stack.Screen name='ScanqrScreen' component={ScanqrScreen} options={{ headerShown: true, title: "Verify Student"}} />
-                <Stack.Screen name='NotificationDisplay' component={NotificationDisplay} options={{ headerShown: true, title: "Notification View"}} />
+                </>
+                :
+                <>
+                  <Stack.Screen name='StaffDashboard' component={HeaderTop} options={{ headerShown: false, title: 'Dashboard' }} />
+                  <Stack.Screen name='StaffProfile' component={StaffProfile} options={{ headerShown: true, title: 'Profile' }} />
+                  <Stack.Screen name='MyLeaves' component={MyLeaves} options={{ headerShown: true, title: 'My Leaves' }} />
+                  <Stack.Screen name='ApplyLeaveForm' component={ApplyLeaveForm} options={{ headerShown: true, title: 'Apply Leave Form' }} />
+                  <Stack.Screen name='ViewLeave' component={ViewLeave} options={{ headerShown: true, title: ' View Leave' }} />
+                  <Stack.Screen name='ViewLeaveFile' component={ViewLeaveFile} options={{ headerShown: true, title: ' View File' }} />
+                  <Stack.Screen name='SupervisorLeaves' component={SupervisorLeaves} options={{ headerShown: true, title: 'Supervisor Leaves' }} />
+                  <Stack.Screen name='MyMovements' component={MyMovements} options={{ headerShown: true, title: 'My Movements' }} />
+                  <Stack.Screen name='SupervisorMovements' component={SupervisorMovements} options={{ headerShown: true, title: 'Supervisor Reports' }} />
+                  <Stack.Screen name='RescheduleMovement' component={MovementReschedule} options={{ headerShown: true, title: 'Reschedule' }} />
+                  <Stack.Screen name='MovementRequest' component={MovementRequest} options={{ headerShown: true, title: 'Apply Movement' }} />
+                  <Stack.Screen name='MovementPending' component={MovementPending} options={{ headerShown: true, title: 'Pending Movenment' }} />
+                  <Stack.Screen name='CheckMovements' component={CheckMovements} options={{ headerShown: true, title: 'Check Movements' }} />
+                  <Stack.Screen name='LibraryBooks' component={LibraryBooks} options={{ headerShown: true, title: 'Issued Books' }} />
+                  <Stack.Screen name='StaffNotification' component={StaffNotification} options={{ headerShown: true, title: 'Notification' }} />
+                  <Stack.Screen name='Calendar' component={Calendar} options={{ headerShown: true, title: ' Calendar' }} />
+                  <Stack.Screen name='AttandancepdfDownload' component={AttandancePdf} options={{ headerShown: true, title: 'Attendance Summary' }} />
+                  <Stack.Screen name='StaffTimeTable' component={StaffTimeTable} options={{ headerShown: true, title: "Today Time Table" }} />
+                  <Stack.Screen name='AccountsDashboard' component={AccountsDashboard} options={{ headerShown: true, title: "Accounts" }} />
+                  <Stack.Screen name='StaffProfileEdit' component={StaffEditProfile} options={{ headerShown: true, title: 'Update Profile' }} />
+                  <Stack.Screen name='StaffWeeklyTimeTable' component={StaffWeeklyTimeTable} options={{ headerShown: true, title: "Weekly Time Table" }} />
+                  <Stack.Screen name='TrackMovement' component={TrackMovement} options={{ headerShown: true, title: 'Track Movement' }} />
+                  <Stack.Screen name='MarkAttendance' component={MarkAttendance} options={{ headerShown: true, title: "Mark Attendance" }} />
+                  <Stack.Screen name='MarkLectureAttendance' component={MarkLectureAttendance} options={{ headerShown: true, title: "Mark Lecture Attendance" }} />
+                  <Stack.Screen name='MovmentRegister' component={MovmentRegister} options={{ headerShown: true, title: 'Movment Register' }} />
+                  <Stack.Screen name='EachLeaveForward' component={EachLeaveForward} options={{ headerShown: true, title: "Leave Confirmation" }} />
+                  <Stack.Screen name='ComplaintsMainScreen' component={ComplaintsMainScreen} options={{ headerShown: true, title: "Complaints" }} />
+                  <Stack.Screen name='LaunchCompaint' component={LaunchCompaint} options={{ headerShown: true, title: "Add Compaint" }} />
+                  <Stack.Screen name='AllComplaints' component={AllComplaints} options={{ headerShown: true, title: "My Complaints" }} />
+                  <Stack.Screen name='AcceptAndCompleteComplaint' component={AcceptAndCompleteComplaint} options={{ headerShown: true, title: "Work on Complaint" }} />
+                  <Stack.Screen name='AssignTaskEach' component={AssignTaskEach} options={{ headerShown: true, title: "Assign Each Task" }} />
+                  <Stack.Screen name='SupervisorTasks' component={SupervisorTasks} options={{ headerShown: true, title: "Supervisor Tasks" }} />
+                  <Stack.Screen name='CompleteTaskScreen' component={CompleteTaskScreen} options={{ headerShown: true, title: "Complete Task" }} />
+                  <Stack.Screen name='RejectTaskScreen' component={RejectTaskScreen} options={{ headerShown: true, title: "Reject Task" }} />
+                  <Stack.Screen name='SupervisorRejectedTasks' component={SupervisorRejectedTasks} options={{ headerShown: true, title: "Rejected Tasks" }} />
+                  <Stack.Screen name='OpenImage' component={OpenImage} options={{ headerShown: true, title: "View Image" }} />
+                  <Stack.Screen name='OpenPDF' component={OpenPDF} options={{ headerShown: true, title: "View Document" }} />
+                  <Stack.Screen name='ChangePassword' component={ChangePassword} options={{ headerShown: true, title: "Change Password" }} />
+                  <Stack.Screen name='CreateNotifiaction' component={CreateNotification} options={{ headerShown: true, title: "Send Notice" }} />
+                  <Stack.Screen name='Notice' component={MainNotification} options={{ headerShown: true, title: "Notifications" }} />
+                  <Stack.Screen name='CreateNotice' component={CreateNotificationMain} options={{ headerShown: true, title: "Create Notice" }} />
+                  <Stack.Screen name="AllChats" options={{ headerShown: false }}>
+                    {() => <ChatRoot StaffIDNo={StaffIDNo} />}
+                  </Stack.Screen>
+                  <Stack.Screen name='NoduesMain' component={NoduesMain} options={{ headerShown: true, title: "No Dues" }} />
+                  <Stack.Screen name='ApproveNodues' component={ApproveNodues} options={{ headerShown: true, title: "Approve No Dues" }} />
+                  <Stack.Screen name='TrackNoDues' component={TrackNoDues} options={{ headerShown: true, title: "Track No Dues" }} />
+                  <Stack.Screen name='ScanqrScreen' component={ScanqrScreen} options={{ headerShown: true, title: "Verify Student" }} />
+                  <Stack.Screen name='NotificationDisplay' component={NotificationDisplay} options={{ headerShown: true, title: "Notification View" }} />
+                  <Stack.Screen name='SubmitReportScreen' component={SubmitReportScreen} options={{ headerShown: true, title: ' Upload Report' }} />
 
-                {/* <Stack.Screen name='AllChats' component={AllChats} options={{ headerShown: true, title: "Chats"}} />
+                  {/* <Stack.Screen name='AllChats' component={AllChats} options={{ headerShown: true, title: "Chats"}} />
               <Stack.Screen name='ChatScreen' component={ChatScreen} options={{ headerShown: false, title: "Chat"}} />
               <Stack.Screen name='NewChat' component={NewChat} options={{ headerShown: true, title: "NewChat"}} /> */}
-                {/*
+                  {/*
               <Stack.Screen name='SideBar' component={SideBar} options={{headerShown:true, title:'Menu',}}/>
               */}
-              </>
+                </>
         }
 
       </Stack.Navigator>

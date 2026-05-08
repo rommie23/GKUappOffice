@@ -12,7 +12,6 @@ const screenHeight = Dimensions.get('window').height
 const screenWidth = Dimensions.get('window').width
 
 import MaskedView from '@react-native-masked-view/masked-view';
-import { ALERT_TYPE, Dialog, AlertNotificationRoot} from 'react-native-alert-notification';
 import PlusIcon from '../components/PlusIcon';
 import { StudentContext } from '../../context/StudentContext';
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -55,13 +54,43 @@ const Movements = () => {
       checkTabs();
     },[])
   return (
-    <Pressable onPress={closeMenu}>
-    <View>
+    <View style={{backgroundColor:'#fff', flex:1}}>
       <ScrollView>
         {
           loading ? <ActivityIndicator /> :
             <View style={{minHeight:screenHeight/1.3}}>
               <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, columnGap: screenWidth / 30, paddingHorizontal: 24, justifyContent: 'flex-start', rowGap: 16, paddingBottom: 4 }}>
+              {
+                tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.TabName === 'ApplyMovements' &&
+                <TouchableOpacity style={styles.cards} onPress={() => {closeMenu();navigation.navigate('MovementRequest')}}>
+                  <View style={styles.cardCont}>
+                    <View style={styles.iconOuter}>
+                      <MaskedView
+                        style={{ flexDirection: 'row', height: 24, width: 24 }}
+                        maskElement={
+                          <View
+                            style={{
+                              backgroundColor: 'transparent',
+                              flex: 1,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <FontAwesome6 name='person-circle-plus' color={colors.uniBlue} size={21} />
+                          </View>
+                        }
+                      >
+                        <LinearGradient
+                          colors={[colors.uniRed, colors.uniBlue]}
+                          style={{ flex: 1 }}
+                        />
+                      </MaskedView>
+
+                    </View>
+                    <Text style={styles.cardText} >Apply Movement</Text>
+                  </View>
+                </TouchableOpacity>
+              }
               {
                 tabsData?.[0]?.['IsVisible'] == 1 && tabsData?.[0]?.TabName === 'MyMovements' &&
                 <TouchableOpacity style={styles.cards} onPress={() => { navigation.navigate('MyMovements') }}>
@@ -121,38 +150,6 @@ const Movements = () => {
 
                     </View>
                     <Text style={styles.cardText}>Supervisor Reports</Text>
-                  </View>
-                </TouchableOpacity>
-              }
-
-              {
-                tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.TabName === 'ApplyMovements' &&
-                <TouchableOpacity style={styles.cards} onPress={() => {closeMenu();navigation.navigate('MovementRequest')}}>
-                  <View style={styles.cardCont}>
-                    <View style={styles.iconOuter}>
-                      <MaskedView
-                        style={{ flexDirection: 'row', height: 24, width: 24 }}
-                        maskElement={
-                          <View
-                            style={{
-                              backgroundColor: 'transparent',
-                              flex: 1,
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <FontAwesome6 name='person-circle-plus' color={colors.uniBlue} size={21} />
-                          </View>
-                        }
-                      >
-                        <LinearGradient
-                          colors={[colors.uniRed, colors.uniBlue]}
-                          style={{ flex: 1 }}
-                        />
-                      </MaskedView>
-
-                    </View>
-                    <Text style={styles.cardText} >Apply Movement</Text>
                   </View>
                 </TouchableOpacity>
               }
@@ -221,7 +218,6 @@ const Movements = () => {
         }
       </ScrollView>
     </View>
-    </Pressable>
   )
 }
 
@@ -235,10 +231,15 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     // backgroundColor:'green',
     alignSelf: 'center',
-    elevation: 2,
     backgroundColor: 'white',
     // opacity: disabled? 0.5 :1
-    borderRadius: 8
+    borderRadius: 8,
+    
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
   cardText: {
     fontSize: 12,

@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StudentContext } from '../../../context/StudentContext';
 import { WebView } from 'react-native-webview';
 import axios from 'axios';
-// import RazorpayCheckout from 'react-native-razorpay'
+import RazorpayCheckout from 'react-native-razorpay'
 
 
 
@@ -64,18 +64,6 @@ const ConvocationFeePay = ({ route }) => {
 
     const confirmPayment = async () => {
         setLoading(true);
-
-        console.log(`
-    idno: ${data.data[0].IDNo},
-    firstname: ${data.data[0].StudentName},
-    email: ${data.data[0].EmailID},
-    phone: ${data.data[0].StudentMobileNo},
-    productinfo: ${feetype},
-    remarks: ${remarks},
-    amount: ${amount},
-    requestid: -1,
-    semester :${sem}
-  `);
 
         const session = await EncryptedStorage.getItem("user_session");
         console.log(`token: Bearer ${session}`);
@@ -410,13 +398,13 @@ const ConvocationFeePay = ({ route }) => {
                                     }
                                     {/* RazorPayButton */}
                                     {
-                                        // tabsData?.[1]?.['IsVisible'] == 1 && tabsData?.[1]?.ElementName === 'RazorPayFeePay' &&
-                                        // <TouchableOpacity
-                                        //     style={[styles.button, { backgroundColor: colors.uniRed }]}
-                                        //     onPress={() => confirmPayment2()}
-                                        // >
-                                        //     <Text style={styles.btnText}>{fees}-Pay Now</Text>
-                                        // </TouchableOpacity>
+                                        tabsData?.[1]?.['IsVisible'] == 1 && tabsData?.[1]?.ElementName === 'RazorPayFeePay' &&
+                                        <TouchableOpacity
+                                            style={[styles.button, { backgroundColor: colors.uniRed }]}
+                                            onPress={() => confirmPayment2()}
+                                        >
+                                            <Text style={styles.btnText}>{fees}-Pay Now</Text>
+                                        </TouchableOpacity>
                                     }
                                 </View>
                             </View>

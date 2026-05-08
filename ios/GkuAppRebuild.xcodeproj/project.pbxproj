@@ -397,7 +397,7 @@
 				CODE_SIGN_ENTITLEMENTS = GkuAppRebuild/GkuAppRebuild.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = 9BMJQNCSMG;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
@@ -409,7 +409,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18;
+				MARKETING_VERSION = 1.24;
 				NEW_SETTING1 = "";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -436,7 +436,7 @@
 				CODE_SIGN_ENTITLEMENTS = GkuAppRebuild/GkuAppRebuild.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = 9BMJQNCSMG;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				INFOPLIST_FILE = GkuAppRebuild/Info.plist;
@@ -446,7 +446,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.18;
+				MARKETING_VERSION = 1.24;
 				NEW_SETTING = "";
 				NEW_SETTING1 = "";
 				OTHER_LDFLAGS = (

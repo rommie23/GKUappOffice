@@ -44,7 +44,7 @@ const PublicScreen = ({ navigation }) => {
       };
     }, [])
   );
-  // console.log("BASE_URL :: ", BASE_URL);
+  console.log("BASE_URL :: ", BASE_URL);
 
   const newModel = (type, title, message) => {
     Dialog.show({

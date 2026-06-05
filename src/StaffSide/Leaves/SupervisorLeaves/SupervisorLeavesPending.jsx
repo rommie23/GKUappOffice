@@ -35,7 +35,7 @@ const YourComponent = () => {
         }
       });
       const currentvcDataDetails = await currentvcData.json();
-      console.log('Fetched VCID pending leaves::::::::::::', currentvcDataDetails);
+      // console.log('Fetched VCID pending leaves::::::::::::', currentvcDataDetails);
       setVCId(currentvcDataDetails)
       setIsLoading(false)
     } catch (error) {

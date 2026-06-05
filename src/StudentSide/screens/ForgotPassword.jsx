@@ -20,7 +20,7 @@ const ForgotPassword = () => {
   const forgotAction = () => {
     if (getEmployeeID && getEmailID) {
       setIsLoading(true)
-      const url = `http://gurukashiuniversity.co.in/GMS/student-forgot-password-action.php?email_id=${getEmailID}&username=${getEmployeeID}`;
+      const url = `https://erp.gku.ac.in/GMS/student-forgot-password-action.php?email_id=${getEmailID}&username=${getEmployeeID}`;
       fetch(url)
         .then(response => {
           if (!response.ok) {

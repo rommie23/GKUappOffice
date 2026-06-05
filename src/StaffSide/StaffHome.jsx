@@ -25,6 +25,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Feather from 'react-native-vector-icons/Feather';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 
 
@@ -129,34 +130,6 @@ const StaffHome = () => {
     }
   }
 
-  const getWorkStatus = (inTime, outTime) => {
-    if (!inTime || inTime === "No Punch") {
-      return "Not Started";
-    }
-
-    const now = new Date();
-
-    // Convert time strings to Date (you may need to adjust format)
-    const inDate = new Date(`1970-01-01T${inTime}`);
-    const outDate =
-      outTime && outTime !== "No Punch"
-        ? new Date(`1970-01-01T${outTime}`)
-        : null;
-
-    const endTime = outDate || now;
-
-    const diffHours = (endTime - inDate) / (1000 * 60 * 60);
-
-    // 🧠 Logic
-    if (!outDate) {
-      if (diffHours < 1) return "Just Started";
-      if (diffHours < 6) return "Working";
-      return "Long Working";
-    } else {
-      if (diffHours < 6) return "Left Early";
-      return "Day Completed";
-    }
-  };
 
   const getShiftProgress = (inTime) => {
     // ❌ No check-in → no progress
@@ -242,7 +215,7 @@ const StaffHome = () => {
     if (session != null) {
       try {
         const token = await onAppBootstrap();
-        // console.log("onAppBootstrap Token:::", token);
+        console.log("removeSession Token:::", token);
         if (!token) {
           console.warn("Device token not available, skipping token upload.");
           return;
@@ -420,8 +393,14 @@ const StaffHome = () => {
         const studentDetailsData = await studentDetails.json()
         // console.log(studentDetailsData['data'][0])
 
-        if (studentDetailsData['data'][0]['ProfileLock'] == 1) {
+        console.log(`${studentDetailsData['data'][0]['ProfileLock'] == 1} || ${studentDetailsData['data'][0]['ForceLogout'] == 1}`);
+        
+        if (studentDetailsData['data'][0]['ProfileLock'] == 1 ||
+          studentDetailsData['data'][0]['ForceLogout'] == 1
+        ) {
+          console.log("Before removeSession");
           await removeSession()
+          console.log("After removeSession");
         } else {
           setData(studentDetailsData)
           // setIsLoggedin(true)
@@ -429,7 +408,7 @@ const StaffHome = () => {
           setStaffImage(studentDetailsData['data'][0]['Imagepath'])
           setImageStatus(studentDetailsData['data'][0]['ImageStatus'])
           setStaffProfileData(studentDetailsData['data'][0])
-          console.log(studentDetailsData['data'][0]);
+          // console.log(studentDetailsData['data'][0]);
 
           setBirthdayTab(isBirthdayToday(studentDetailsData['data'][0]['DateOfBirth']))
           setWorkAnniversaryTab(isBirthdayToday(studentDetailsData['data'][0]['DateOfJoining']))
@@ -638,7 +617,7 @@ const StaffHome = () => {
   }
 
   const acceptNoDuesTab = async () => {
-    console.log("acceptNoDuesTabacceptNoDuesTab");
+    // console.log("acceptNoDuesTabacceptNoDuesTab");
 
     setIsLoading(true)
     const session = await EncryptedStorage.getItem("user_session")
@@ -958,6 +937,24 @@ const StaffHome = () => {
                       </View>
                     </TouchableOpacity>
                   }
+                  
+                  {
+                    dashboardTabs?.Dashboard_fc?.[11]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[11]['ElementName'] == 'VisitorsList' &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => navigation.navigate('VisitorsList')}>
+                      <LinearGradient
+                        colors={colors.solidOrange}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialCommunityIcons name="handshake-outline" color="#fff" size={20} />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Visitor</Text>
+                        <Text style={styles.subtitle}>Approve Visitor</Text>
+                      </View>
+                    </TouchableOpacity>
+                  }
 
                   {/* Approve No dues */}
                   {
@@ -998,7 +995,7 @@ const StaffHome = () => {
               </View>
 
 
-              {/* ///////////////////////////// leave related tabs ////////////////////////// */}
+              {/* /////////////// leave related tabs //////////// */}
 
 
               <View style={{ marginTop: 16 }}>
@@ -1086,7 +1083,7 @@ const StaffHome = () => {
 
 
 
-              {/* ///////////////////////////// Movement related tabs ////////////////////////// */}
+              {/* ///////////// Movement related tabs ////////////////////////// */}
 
               <View style={{ marginTop: 16 }}>
                 <Text style={{ width: '88%', marginHorizontal: 'auto', fontSize: 16, fontWeight: '600' }}>Movement</Text>

@@ -26,8 +26,6 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FeesAlert from '../components/feesRelated/FeesAlert'
 
 
-
-
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
@@ -1252,6 +1250,46 @@ const StudentHome = () => {
                             style={styles.titleText}
                           >
                             Admit Card
+                          </Text>
+                          <Text style={styles.subTitleText}>Bus Service Details</Text>
+                        </TouchableOpacity>
+                      }
+                      
+                      {
+                        tabsData?.Examination_st?.[8]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[8]?.ElementName === 'DateSheet' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('DateSheet') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <FontAwesome name="list" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Date Sheet
                           </Text>
                           <Text style={styles.subTitleText}>Bus Service Details</Text>
                         </TouchableOpacity>

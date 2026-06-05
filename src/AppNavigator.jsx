@@ -5,7 +5,8 @@ import Login from './StudentSide/screens/Login'
 // import Splash from './StudentSide/screens/Splash'
 import StudentDashboard from './StudentSide/drawer/StudentDashboard'
 import { createStackNavigator } from '@react-navigation/stack'
-// import DateSheet from './StudentSide/screens/DateSheet'
+import DateSheet from './StudentSide/screens/examination/DateSheet'
+import EachDateSheet from './StudentSide/screens/examination/EachDateSheet'
 import StudentResult from './StudentSide/screens/examination/StudentResult'
 import StudentSemesterResult from './StudentSide/screens/examination/StudentSemesterResult'
 import { StudentContext } from './context/StudentContext'
@@ -141,6 +142,7 @@ import NotificationDisplay from './StaffSide/Screens/NotificationDisplay'
 import BusPassDetails from './StudentSide/screens/BusService/BusPassDetails'
 import BusFeePay from './StudentSide/screens/BusService/BusFeePay'
 import { ActivityIndicator } from 'react-native-paper'
+import VisitorsList from './StaffSide/Visitor/VisitorsList'
 import { BASE_URL } from '@env';
 
 
@@ -335,8 +337,9 @@ const AppNavigator = () => {
                   <Stack.Screen name="MessagesRoot" options={{ headerShown: false }}>
                     {() => <MessagesRoot studentIDNo={studentIDNo} />}
                   </Stack.Screen>
-                  {/* <Stack.Screen name='DateSheet' component={DateSheet} options={{ headerShown: true, title: 'Date Sheet' }} />
-              <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: 'Notifications' }}/>
+                  <Stack.Screen name='DateSheet' component={DateSheet} options={{ headerShown: true, title: 'All Date Sheets' }} />
+                  <Stack.Screen name='EachDateSheet' component={EachDateSheet} options={{ headerShown: true, title: 'Date Sheet' }} />
+              {/* <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: 'Notifications' }}/>
               <Stack.Screen name='StudentNoticeBoard' component={StudentNoticeBoard} options={{ headerShown: true, title: 'Notice Board'}} />
               <Stack.Screen name='MyService' component={MyService} options={{ headerShown: true, title: 'MyService'}} />
               <Stack.Screen name='PreRequisite' component={PreRequisite} options={{ headerShown: true, title: "Pre Requisite Course"}}/>
@@ -396,6 +399,7 @@ const AppNavigator = () => {
                   <Stack.Screen name='ScanqrScreen' component={ScanqrScreen} options={{ headerShown: true, title: "Verify Student" }} />
                   <Stack.Screen name='NotificationDisplay' component={NotificationDisplay} options={{ headerShown: true, title: "Notification View" }} />
                   <Stack.Screen name='SubmitReportScreen' component={SubmitReportScreen} options={{ headerShown: true, title: ' Upload Report' }} />
+                  <Stack.Screen name='VisitorsList' component={VisitorsList} options={{ headerShown: true, title: 'Visitors' }} />
 
                   {/* <Stack.Screen name='AllChats' component={AllChats} options={{ headerShown: true, title: "Chats"}} />
               <Stack.Screen name='ChatScreen' component={ChatScreen} options={{ headerShown: false, title: "Chat"}} />

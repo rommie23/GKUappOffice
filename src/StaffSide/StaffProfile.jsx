@@ -187,7 +187,7 @@ export default function StaffProfile() {
     }
   }
 
-  console.log(ImageUrl + staffImage);
+  // console.log(ImageUrl + staffImage);
   
 
   const submitModel = (type, title, message) => {

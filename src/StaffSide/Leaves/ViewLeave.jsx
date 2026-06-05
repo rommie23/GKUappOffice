@@ -1,5 +1,5 @@
-import {useContext, useState, useCallback, useEffect} from 'react';
-import { RefreshControl, Dimensions, ScrollView, StyleSheet, Text, View, Image, Pressable, TouchableOpacity } from 'react-native';
+import { useContext, useState, useCallback, useEffect } from 'react';
+import { RefreshControl, Dimensions, ScrollView, StyleSheet, Text, View, Image, Pressable, TouchableOpacity, Linking } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BASE_URL, IMAGE_URL } from '@env';
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -53,34 +53,39 @@ const ViewLeave = () => {
       const staffPendingForModalDetails = await PendingDetailsForModal.json();
       // console.log(staffPendingForModalDetails['data1'][0]['LeaveTypeId']);
       setLeaveType(staffPendingForModalDetails['data1'][0]['LeaveTypeId'])
-      
+
       setLeaveDataInModal(staffPendingForModalDetails.data1);
-      if(staffPendingForModalDetails['data1'][0]['DurationTime']!=0)
-        {
-          setLeaveDurationCount(staffPendingForModalDetails['data1'][0]['DurationTime']);
-        }
-        else{
-          setLeaveDurationCount(staffPendingForModalDetails['data1'][0]['Duration']);
-        }
-        if(staffPendingForModalDetails['data1'][0]['LeaveSchoduleTime']=='1')
-          {
+      if (staffPendingForModalDetails['data1'][0]['DurationTime'] != 0) {
+        setLeaveDurationCount(staffPendingForModalDetails['data1'][0]['DurationTime']);
+      }
+      else {
+        setLeaveDurationCount(staffPendingForModalDetails['data1'][0]['Duration']);
+      }
+      if (staffPendingForModalDetails['data1'][0]['LeaveSchoduleTime'] == '1') {
 
-            setScheduleTime('(First Half)')
-          }
-          else if(staffPendingForModalDetails['data1'][0]['LeaveSchoduleTime']=='2'){
-            setScheduleTime('(Second Half)')
+        setScheduleTime('(First Half)')
+      }
+      else if (staffPendingForModalDetails['data1'][0]['LeaveSchoduleTime'] == '2') {
+        setScheduleTime('(Second Half)')
 
-          }else{
-            setScheduleTime('')
-          }
+      } else {
+        setScheduleTime('')
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error fetching data for leave ID', ':', error);
+    }
+  };
+  // console.log("IMAGE:::::::::::", IMAGE_URL + staffImage);
+
+  const openAttachment = (path) => {
+          const url = IMAGE_URL + "Images/Staff/LeaveFileAttachment/"+ path;
+          console.log(url);
           
-          setIsLoading(false);
-        } catch (error) {
-          setIsLoading(false);
-          console.error('Error fetching data for leave ID', ':', error);
-        }
+          Linking.openURL(url);
       };
-      console.log("IMAGE:::::::::::",IMAGE_URL+staffImage);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -95,22 +100,22 @@ const ViewLeave = () => {
         {getLeaveDataModal && (
           <>
             <ScrollView>
-    
+
               <View style={styles.sectionBody}>
-              <View style={styles.profile}>
-                      <View style={{width:screenWidth/5}}>
-                        <Image alt="" source={{ uri: `${ImageUrl}Images/Staff/${staffImage}` }} style={styles.profileAvatar} /></View>
-                      <View style={{width:screenWidth/1}}>
-                      <Text style={styles.profileName}>{getLeaveDataModal[0]['StaffName'].trim()}</Text>
-                      <Text style={styles.profileEmail}>Employee ID: {getLeaveDataModal[0]['IDNo']}</Text>
-                      <Text style={styles.profileEmail}>{getLeaveDataModal[0]['Designation']}</Text>
-                      <Text style={styles.profileEmail}>{getLeaveDataModal[0]['Department']}</Text>
-                      </View>
-                    </View>
+                <View style={styles.profile}>
+                  <View style={{ width: screenWidth / 5 }}>
+                    <Image alt="" source={{ uri: `${ImageUrl}Images/Staff/${staffImage}` }} style={styles.profileAvatar} /></View>
+                  <View style={{ width: screenWidth / 1 }}>
+                    <Text style={styles.profileName}>{getLeaveDataModal[0]['StaffName'].trim()}</Text>
+                    <Text style={styles.profileEmail}>Employee ID: {getLeaveDataModal[0]['IDNo']}</Text>
+                    <Text style={styles.profileEmail}>{getLeaveDataModal[0]['Designation']}</Text>
+                    <Text style={styles.profileEmail}>{getLeaveDataModal[0]['Department']}</Text>
+                  </View>
+                </View>
                 <View style={styles.rowSpacer} />
                 <View style={styles.rowWrapper}>
                   {/* <TouchableOpacity> */}
-                    
+
                   {/* </TouchableOpacity> */}
                   <Pressable
                     style={styles.row}>
@@ -178,7 +183,7 @@ const ViewLeave = () => {
                         name="chevron-double-right"
                         size={10} />
                     </View>
-                    <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Duration:</Text>  {getLeaveDurationCount+getScheduleTime} </Text>
+                    <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Duration:</Text>  {getLeaveDurationCount + getScheduleTime} </Text>
                     <View style={styles.rowSpacer} />
                   </Pressable>
                 </View>
@@ -193,31 +198,31 @@ const ViewLeave = () => {
                         size={10} />
                     </View>
                     {/* <Text style={styles.textLabel}> */}
-                      <Text style={styles.textLabelInder} >Adjustment File:</Text>
-                      <View style={styles.bottomBtn}>
-              <Pressable style={styles.btn} onPress={() => {
-                          navigation.navigate('ViewLeaveFile', { FilePAth: getLeaveDataModal[0]['FilePath'] })
-                        }}>
-                <Text style={styles.btnTxt}>View File</Text>
-              </Pressable>
-            
-            </View>
-                      {/* <Pressable style={[ { backgroundColor: '#223260',marginLeft:100,width:100 }]} onPress={() => {
+                    <Text style={styles.textLabelInder} >Adjustment File:</Text>
+                    <View style={styles.bottomBtn}>
+                      <Pressable style={styles.btn} onPress={() => {
+                        navigation.navigate('ViewLeaveFile', { FilePAth: getLeaveDataModal[0]['FilePath'] })
+                      }}>
+                        <Text style={styles.btnTxt}>View File</Text>
+                      </Pressable>
+
+                    </View>
+                    {/* <Pressable style={[ { backgroundColor: '#223260',marginLeft:100,width:100 }]} onPress={() => {
                           navigation.navigate('ViewLeaveFile', { FilePAth: getLeaveDataModal[0]['FilePath'] })
                         }}>
                           <Text>View</Text> */}
-                        {/* <MaterialCommunityIcons
+                    {/* <MaterialCommunityIcons
                           color="#fff"
                           name="eye"
                           size={10} /> */}
-                      {/* </Pressable> */}
+                    {/* </Pressable> */}
                     {/* </Text> */}
                     <View style={styles.rowSpacer} />
                   </Pressable>
                 </View>
 
 
-                <View style={[styles.rowWrapper, {paddingRight:16}]}>
+                <View style={[styles.rowWrapper, { paddingRight: 16 }]}>
                   <Pressable
                     style={styles.row}>
                     <View
@@ -269,13 +274,13 @@ const ViewLeave = () => {
                         name="chevron-double-right"
                         size={10} />
                     </View>
-                    <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Status  : </Text><Text style={{color: getLeaveDataModal[0]['Status'] === 'Pending To Senction' ? 'red' : 'green', fontWeight: '800'}}>  {getLeaveDataModal[0]['Status']}</Text> </Text>
+                    <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Status  : </Text><Text style={{ color: getLeaveDataModal[0]['Status'] === 'Pending To Senction' ? 'red' : 'green', fontWeight: '800' }}>  {getLeaveDataModal[0]['Status']}</Text> </Text>
                     <View style={styles.rowSpacer} />
                   </Pressable>
                 </View>
+                <View style={styles.rowWrapper}>
                 {
-                  leaveType == 8 && 
-                    <View style={styles.rowWrapper}>
+                  leaveType == 8 && getLeaveDataModal[0].ExtraFilePath == null && getLeaveDataModal[0].ExtraStatus == 1 ?
                       <Pressable
                         style={styles.row}>
                         <View
@@ -285,18 +290,39 @@ const ViewLeave = () => {
                             name="chevron-double-right"
                             size={10} />
                         </View>
-                        <View style={{flexDirection:'row', alignItems:'center'}}>
-                        <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Add Approval File : </Text></Text>
-                        <TouchableOpacity style={{backgroundColor:colors.uniBlue, paddingHorizontal:8, paddingVertical:4}}
-                        onPress={()=>navigation.navigate('SubmitReportScreen')}>
-                          <Text style={{color:'white', fontWeight:'600'}}>Click to Upload</Text>
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.textLabel}><Text style={styles.textLabelInder}>Add Report File : </Text></Text>
+                          <TouchableOpacity style={{ backgroundColor: colors.uniBlue, paddingHorizontal: 8, paddingVertical: 4, borderRadius:4 }}
+                            onPress={() => navigation.navigate('SubmitReportScreen', {leaveId : leaveID})}>
+                            <Text style={{ color: 'white', fontWeight: '600' }}>Click to Upload</Text>
+                          </TouchableOpacity>
 
                         </View>
                         <View style={styles.rowSpacer} />
                       </Pressable>
-                    </View>
+                    : leaveType == 8 && getLeaveDataModal[0].ExtraFilePath != null ?
+                      <Pressable
+                        style={styles.row}>
+                        <View
+                          style={[styles.rowIcon, { backgroundColor: '#223260' }]}>
+                          <MaterialCommunityIcons
+                            color="#fff"
+                            name="chevron-double-right"
+                            size={10} />
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.textLabel}><Text style={styles.textLabelInder}>View Report File : </Text></Text>
+                          <TouchableOpacity style={{ backgroundColor: colors.uniBlue, paddingHorizontal: 8, paddingVertical: 4, borderRadius:4 }}
+                            onPress={() => openAttachment(getLeaveDataModal[0]['ExtraFilePath'])}>
+                            <Text style={{ color: 'white', fontWeight: '600' }}>File</Text>
+                          </TouchableOpacity>
+
+                        </View>
+                        <View style={styles.rowSpacer} />
+                      </Pressable> 
+                      : null
                 }
+                </View>
               </View>
 
             </ScrollView>
@@ -328,7 +354,7 @@ const styles = StyleSheet.create({
   },
   profile: {
     padding: 16,
-    flexDirection:'row',
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderTopWidth: 1,
@@ -341,7 +367,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   profileName: {
-    marginLeft:12,
+    marginLeft: 12,
     fontSize: 20,
     fontWeight: '600',
     color: '#090909',
@@ -352,7 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
     color: '#848484',
-    marginLeft:12,
+    marginLeft: 12,
   },
   /** Section */
   sectionBody: {
@@ -407,7 +433,7 @@ const styles = StyleSheet.create({
   bottomBtn: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    borderRadius:10
+    borderRadius: 10
   },
   btnTxt: {
     color: 'white',
@@ -417,10 +443,10 @@ const styles = StyleSheet.create({
   },
   btn: {
 
-    width:100,
+    width: 100,
     backgroundColor: '#223260',
     alignItems: 'center',
     borderRadius: 8,
-    marginLeft:100
+    marginLeft: 100
   },
 });

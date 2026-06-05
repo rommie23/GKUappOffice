@@ -1,19 +1,3 @@
-// import { StyleSheet, Text, View } from 'react-native'
-// import React from 'react'
-
-// const SubmitReportScreen = () => {
-//   return (
-//     <View>
-//       <Text style={{color:'black'}}>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum maxime quo illo? Maxime laudantium eum ullam fuga dolorem inventore minima, veritatis rerum aliquam! Veniam earum doloremque similique nam ducimus quam?</Text>
-//     </View>
-//   )
-// }
-
-// export default SubmitReportScreen
-
-// const styles = StyleSheet.create({})
-
-
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   View,
@@ -31,7 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StudentContext } from '../../../context/StudentContext';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-notification';
 
-const SubmitReportScreen = () => {
+const SubmitReportScreen = ({ route }) => {
+  const {leaveId} = route.params || 0;
   const { setIsLoggedin, setUserType, mobileToken, setBlocked, blocked } = useContext(StudentContext)
   const [loading, setLoading] = useState(true);
   const [leaves, setLeaves] = useState([]);
@@ -52,7 +37,10 @@ const SubmitReportScreen = () => {
             Authorization: `Bearer ${session}`,
             Accept: "application/json",
             'Content-Type': "application/json"
-          }
+          },
+          body: JSON.stringify({
+            leaveId
+          })
         }
       );
       const data = await res.json();

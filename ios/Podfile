@@ -2,7 +2,7 @@ install! 'cocoapods', :disable_input_output_paths => true
 
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
-platform :ios, '10.0'
+platform :ios, '15.6'
 prepare_react_native_project!
 
 target 'GkuAppRebuild' do

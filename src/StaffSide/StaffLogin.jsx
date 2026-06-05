@@ -51,7 +51,6 @@ const Login = () => {
                     return
                 }
                 const studentDetailsData = await studentDetails.json()
-                // console.log(studentDetailsData)
                 setData(studentDetailsData)
                 setIsLoggedin(true)
                 setUserType('Staff')

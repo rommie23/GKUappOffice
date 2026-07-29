@@ -8,7 +8,7 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { BASE_URL } from '@env';
 import LinearGradient from 'react-native-linear-gradient';
 import { StudentContext } from '../../context/StudentContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 

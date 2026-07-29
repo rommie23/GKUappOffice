@@ -68,8 +68,8 @@ const BusFeePay = ({ route }) => {
         amount: fees,
         requestid: "-1",
         semester: sem,
-        routeid : routeId,
-        spotid : spotId
+        routeid: routeId,
+        spotid: spotId
       }
     );
 
@@ -91,8 +91,8 @@ const BusFeePay = ({ route }) => {
             amount: fees,
             requestid: "-1",
             semester: sem,
-            routeid : routeId,
-            spotid : spotId
+            routeid: routeId,
+            spotid: spotId
           },
           {
             responseType: 'text',  // forcing raw text to handle broken JSON
@@ -172,8 +172,8 @@ const BusFeePay = ({ route }) => {
             amount: fees,
             requestid: "-1",
             semester: sem,
-            routeid : routeId,
-            spotid : spotId
+            routeid: routeId,
+            spotid: spotId
           },
           {
             responseType: 'text',  // forcing raw text to handle broken JSON
@@ -297,6 +297,92 @@ const BusFeePay = ({ route }) => {
     }
   };
 
+  const confirmPayment3 = async () => {   //easypay   
+		setLoading(true);
+    
+
+		const session = await EncryptedStorage.getItem("user_session");
+		if (session != null) {
+			try {
+        console.log(`
+            idno: ${data.data[0].IDNo},
+            firstname: ${data.data[0].StudentName},
+            email: ${data.data[0].EmailID},
+            phone: ${data.data[0].StudentMobileNo},
+            productinfo: ${feetype},
+            remarks: ${remarks},
+            amount: ${fees},
+            requestid: -1,
+            semester :${sem},
+            routeid: ${routeId},
+            spotid: ${spotId}
+        `);
+				const paymentDetailsData = await axios.post(
+					"https://payment.gku.ac.in/api/epay/initiate-we-easypay",
+					{
+						idno: data.data[0].IDNo,
+						firstname: data.data[0].StudentName,
+						email: data.data[0].EmailID,
+						phone: data.data[0].StudentMobileNo,
+						productinfo: feetype,
+						remarks: remarks,
+						amount: fees,
+						requestid: "-1",
+						semester: sem,
+            routeid: routeId,
+            spotid: spotId
+					},
+					{
+						responseType: 'text',  // forcing raw text to handle broken JSON
+						headers: {
+							Accept: "application/json",
+							"Content-Type": "application/json",
+						},
+					}
+				);
+        console.log({paymentDetailsData});
+        
+
+				let parsedData;
+				try {
+					parsedData = JSON.parse(paymentDetailsData.data);
+					console.log("parsedData", parsedData);
+
+					navigation.navigate('EasyPayScreen', { payData: parsedData })
+				} catch (parseErr) {
+					console.warn('Primary JSON.parse failed:', parseErr);
+					// 🩹 Try to auto-fix: trim + add missing brace
+					let fixed = paymentDetailsData.data.trim();
+					if (!fixed.endsWith('}')) {
+						fixed += '}';
+					}
+					try {
+						parsedData = JSON.parse(fixed);
+						navigation.navigate('EasyPayScreen', { payData: parsedData })
+						// if (parsedData.flag == 1) {
+						//   navigation.navigate('PayFeeScreen', { payData: parsedData })
+						// }
+						console.log('Successfully parsed with fallback fix.');
+					} catch (fixErr) {
+						console.error('Fallback parse failed too:', fixErr);
+						throw new Error('Invalid JSON from server.');
+					}
+				}
+
+				console.log("Parsed payment data:", parsedData);
+
+				setLoading(false);
+			} catch (error) {
+				console.log('Error fetching confirmPayment API:', error);
+				setLoading(false);
+				errorModel(ALERT_TYPE.DANGER, "Oops!!!", "Something went wrong.");
+			}
+		} else {
+			console.warn("No session found.");
+			setLoading(false);
+		}
+	}
+
 
   // /////////////////// To hide/show buttons in UI for Gateway ///////////////
 
@@ -396,6 +482,15 @@ const BusFeePay = ({ route }) => {
                       onPress={() => confirmPayment2()}
                     >
                       <Text style={styles.btnText}>{fees}-Pay Now</Text>
+                    </TouchableOpacity>
+                  }
+                  {
+                    tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'EazyPayFeePay' &&
+                    <TouchableOpacity
+                      style={[styles.button, { backgroundColor: colors.uniBlue }]}
+                      onPress={() => confirmPayment3()}
+                    >
+                      <Text style={styles.btnText}>Pay Now easy</Text>
                     </TouchableOpacity>
                   }
                 </View>

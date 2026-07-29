@@ -58,6 +58,8 @@ const StaffHome = () => {
   const [dashboardTabs, setDashboardTabs] = useState([])
   const [deviceToken, setDeviceToken] = useState('')
   const [AccPermission, setAccPermission] = useState(0)
+  const [admissionBoardPermission, setAdmissionBoardPermission] = useState(0)
+  const [specialTabPermission, setSpecialTabPermission] = useState(0)
   const [sendNoticePermission, setSendNoticePermission] = useState(0)
   const [noDueTab, setNoDueTab] = useState("")
   const [noDueApproveTab, setNoDueApproveTab] = useState("")
@@ -458,6 +460,8 @@ const StaffHome = () => {
     fetchAllTabs();
     checkSession()
     checkAccAuth();
+    checkAdmissionAuth();
+    specialTabPermissions();
     checkSendNoticeAuth();
     acceptNoDuesTab();
     noDuesTabPermission();
@@ -480,6 +484,8 @@ const StaffHome = () => {
     checkTabs();
     fetchAllTabs();
     checkAccAuth();
+    checkAdmissionAuth();
+    specialTabPermissions();
     checkSendNoticeAuth();
     acceptNoDuesTab();
     setTimeout(() => {
@@ -570,6 +576,55 @@ const StaffHome = () => {
       }
     }
   }
+  
+  const checkAdmissionAuth = async () => {
+    setIsLoading(true)
+    const session = await EncryptedStorage.getItem("user_session")
+    console.log("admissionPerm::::");
+    if (session != null) {
+      try {
+        const AdmissionPerm = await fetch(`${BASE_URL}/staff/admissionBoardPermission`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const admissionPerm = await AdmissionPerm.json()
+        console.log("admissionPerm::::", admissionPerm);
+        
+        setAdmissionBoardPermission(admissionPerm['flag'])
+        setIsLoading(false)
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false)
+      }
+    }
+  }
+  
+  const specialTabPermissions = async () => {
+    setIsLoading(true)
+    const session = await EncryptedStorage.getItem("user_session")
+    if (session != null) {
+      try {
+        const SecurityPerm = await fetch(`${BASE_URL}/staff/specialTabPermissions`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const pageSecPerm = await SecurityPerm.json()
+        console.log(pageSecPerm);
+        
+        setSpecialTabPermission(pageSecPerm)
+        setIsLoading(false)
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false)
+      }
+    }
+  }
 
   const checkSendNoticeAuth = async () => {
     setIsLoading(true)
@@ -606,7 +661,7 @@ const StaffHome = () => {
             'Content-Type': 'application/json'
           }
         })
-        const showTabPerm = await tabPerm.json()
+        const showTabPerm = await tabPerm.json()        
         setNoDueApproveTab(showTabPerm['result']['total'])
         setIsLoading(false)
       } catch (error) {
@@ -862,24 +917,6 @@ const StaffHome = () => {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.scrollContainer}
                 >
-                  {/* Books Issued */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[2]['ElementName'] == 'BooksIssued' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => { navigation.navigate('LibraryBooks') }}>
-                      <LinearGradient
-                        colors={colors.solidBlue}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="book-outline" size={22} color="#fff" />
-                      </LinearGradient>
-
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Library</Text>
-                        <Text style={styles.subtitle}>{`${gettTotalBooks} Active`}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
 
                   {/* Accounts */}
                   {
@@ -896,6 +933,43 @@ const StaffHome = () => {
                       <View style={styles.textContainer}>
                         <Text style={styles.title}>Accounts</Text>
                         <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  }
+                  {/* Admissions */}
+                  {
+                    dashboardTabs?.Dashboard_fc?.[13]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[13]['ElementName'] == 'AdmissionDashboard' && admissionBoardPermission == 1 &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => navigation.navigate('AdmissionsDashboard')}>
+                      <LinearGradient
+                        colors={colors.solidGreen}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialIcons name="groups-2" size={22} color="#fff" />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Admissions</Text>
+                        <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  }
+
+                  {/* Books Issued */}
+                  {
+                    dashboardTabs?.Dashboard_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[2]['ElementName'] == 'BooksIssued' &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => { navigation.navigate('LibraryBooks') }}>
+                      <LinearGradient
+                        colors={colors.solidBlue}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialCommunityIcons name="book-outline" size={22} color="#fff" />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Library</Text>
+                        <Text style={styles.subtitle}>{`${gettTotalBooks} Active`}</Text>
                       </View>
                     </TouchableOpacity>
                   }
@@ -938,8 +1012,8 @@ const StaffHome = () => {
                     </TouchableOpacity>
                   }
                   
-                  {
-                    dashboardTabs?.Dashboard_fc?.[11]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[11]['ElementName'] == 'VisitorsList' &&
+                  {/* {
+                    dashboardTabs?.Dashboard_fc?.[11]?.['IsVisible'] == 0 && dashboardTabs?.Dashboard_fc[11]['ElementName'] == 'VisitorsList' &&
                     <TouchableOpacity style={styles.card}
                       onPress={() => navigation.navigate('VisitorsList')}>
                       <LinearGradient
@@ -954,11 +1028,67 @@ const StaffHome = () => {
                         <Text style={styles.subtitle}>Approve Visitor</Text>
                       </View>
                     </TouchableOpacity>
+                  } */}
+                  {/* STUDENT ID CARD SCAN */}
+                  {
+                    dashboardTabs?.Dashboard_fc?.[12]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[12]['ElementName'] == 'StudentIDCardCheck' && specialTabPermission.scanPermission &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => navigation.navigate('ScanqrScreen')}>
+                      <LinearGradient
+                        colors={colors.solidPurple}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialCommunityIcons name="qrcode-scan" color="#fff" size={20} />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Scan Smart Card</Text>
+                        <Text style={styles.subtitle}>Scan Student ID Card</Text>
+                      </View>
+                    </TouchableOpacity>
                   }
+
+                  {/* Hostel Tab for Warden */}
+                  {
+                    dashboardTabs?.Dashboard_fc?.[14]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[14]['ElementName'] == 'HostelWarden' && specialTabPermission.hostelPermission &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => navigation.navigate('HostelWarden')}>
+                      <LinearGradient
+                        colors={colors.solidOrange}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialCommunityIcons name="office-building-outline" color="#fff" size={20} />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Hostel</Text>
+                        <Text style={styles.subtitle}>Hostel Warden</Text>
+                      </View>
+                    </TouchableOpacity>
+                  }
+                  {/* Gate Security and Passes */}
+                  {
+                    dashboardTabs?.Dashboard_fc?.[15]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[15]['ElementName'] == 'GateSecurity' && specialTabPermission.gatePermission &&
+                    <TouchableOpacity style={styles.card}
+                      onPress={() => navigation.navigate('GateSecurity')}>
+                      <LinearGradient
+                        colors={colors.solidPurple}
+                        style={[styles.iconBg, { height: 30, width: 30 }]}
+                      >
+                        <MaterialCommunityIcons name="security" color="#fff" size={20} />
+                      </LinearGradient>
+
+                      <View style={styles.textContainer}>
+                        <Text style={styles.title}>Gate Security</Text>
+                        <Text style={styles.subtitle}>Gate Check in/out</Text>
+                      </View>
+                    </TouchableOpacity>
+                  }
+
 
                   {/* Approve No dues */}
                   {
-                    dashboardTabs.Dashboard_fc?.[10]?.['IsVisible'] == 1 && dashboardTabs.Dashboard_fc[10]['ElementName'] == 'NoDues' &&
+                    dashboardTabs.Dashboard_fc?.[10]?.['IsVisible'] == 1 && dashboardTabs.Dashboard_fc[10]['ElementName'] == 'NoDues' && noDueApproveTab == 1 &&
                     <TouchableOpacity style={styles.card}
                       onPress={() => navigation.navigate('ApproveNodues')}>
                       <LinearGradient
@@ -1154,7 +1284,7 @@ const StaffHome = () => {
 
               {/* ///////////////////////////// Complaint related tabs ////////////////////////// */}
               {
-                dashboardTabs?.Dashboard_fc?.[3]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[3]['ElementName'] == 'LaunchComplaint' &&
+                dashboardTabs?.Dashboard_fc?.[3]?.['IsVisible'] == 0 && dashboardTabs?.Dashboard_fc[3]['ElementName'] == 'LaunchComplaint' &&
                 <View style={{ marginTop: 16 }}>
                   <Text style={{ width: '88%', marginHorizontal: 'auto', fontSize: 16, fontWeight: '600' }}>Complains</Text>
                   <ScrollView

@@ -41,7 +41,7 @@ const PaymentSuccessScreen = ({ route }) => {
                                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#727070' }}>Amount:</Text>
                                 <Text style={{ fontSize: 16, color: '#1b1b1b', flexShrink: 1 }}>{ status['amount'] ? status['amount'] : status['Amount']}</Text>
                             </View>
-                            <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+                            {/* <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
                                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#727070' }}>Name:</Text>
                                 <Text
                                     style={{
@@ -54,13 +54,13 @@ const PaymentSuccessScreen = ({ route }) => {
                                 >
                                     {status['firstname'] ? status['firstname'] : status['Name']}
                                 </Text>
-                            </View>
-                            <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+                            </View> */}
+                            {/* <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
                                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#727070' }}>Mobile:</Text>
                                 <Text style={{ fontSize: 16, color: '#1b1b1b', flexShrink: 1 }}>{status['phone'] ? status['phone'] : status['MobileNo']}</Text>
-                            </View>
+                            </View> */}
 
-                            <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+                            {/* <View style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
                                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#727070' }}>Email:</Text>
                                 <Text
                                     style={{
@@ -73,7 +73,7 @@ const PaymentSuccessScreen = ({ route }) => {
                                 >
                                     {status['email'] ? status['email'] : status['Email']}
                                 </Text>
-                            </View>
+                            </View> */}
 
                             <View style={{ justifyContent: 'space-between', paddingVertical: 8 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#727070' }}>Status:</Text>

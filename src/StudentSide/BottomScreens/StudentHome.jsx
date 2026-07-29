@@ -122,6 +122,8 @@ const StudentHome = () => {
   const [birthdayTab, setBirthdayTab] = useState(false)
   const [flag, setFlag] = useState([])
   const [feePending, setFeePending] = useState(true)
+  const [hostelTab, setHostelTab] = useState(false)
+  const [hostelData, setHostelData] = useState({})
 
 
   //////////////////////////// meter bill Api //////////////////////////
@@ -365,6 +367,29 @@ const StudentHome = () => {
     }
   }
 
+  const hostelTabShow=async()=>{
+    setLoading(true)
+    const session = await EncryptedStorage.getItem("user_session")
+    if (session != null) {
+      try {
+        const hostelFlag = await fetch(BASE_URL + '/student/hostelStudentDetails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session}`
+          },
+        })
+        const hostelFlagDetails = await hostelFlag.json()
+        if (hostelFlagDetails.flag == 1) {
+          setHostelTab(true)
+          setHostelData(hostelFlagDetails.studentData)
+        }
+        
+      } catch (error) {
+        console.log('Error fetching flags data:examination:', error)
+        setLoading(false)
+      }
+    }
+  }
 
 
   useEffect(() => {
@@ -374,6 +399,7 @@ const StudentHome = () => {
     convoTab();
     getCourseFlag();
     fetchFeePending();
+    hostelTabShow();
   }, [])
 
 
@@ -383,6 +409,7 @@ const StudentHome = () => {
     checkSession()
     convoTab();
     fetchFeePending();
+    hostelTabShow();
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
@@ -889,13 +916,15 @@ const StudentHome = () => {
                               <Text style={styles.subTitleText}>Current Bill is : ₹ </Text>
                             </TouchableOpacity>
                           }
-
-                          {/* Apply Student Leave */}
-                          {tabsData?.Dashboard_st?.[6]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[6]?.ElementName === 'SudentLeave' &&
+                        </View>
+                      }
+                      {/* hostel */}
+                          {tabsData?.Dashboard_st?.[10]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[10]?.ElementName === 'Hostel' && hostelTab &&
                             <TouchableOpacity
                               activeOpacity={0.85}
                               style={styles.cardOuterShapeScroll}
-                              onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}
+                              onPress={() => { navigation.navigate('HostelDetails', {hostelData}) }}
+                              // onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}
                             >
                               <View
                                 style={styles.iconOuterRing}
@@ -911,7 +940,7 @@ const StudentHome = () => {
                                         alignItems: 'center',
                                       }}
                                     >
-                                      <Ionicons name="log-out-outline" color={colors.uniBlue} size={30} />
+                                      <MaterialCommunityIcons name="office-building-outline" color={colors.uniBlue} size={30} />
                                     </View>
                                   }
                                 >
@@ -924,13 +953,11 @@ const StudentHome = () => {
                               <Text
                                 style={styles.titleText}
                               >
-                                Leave
+                                Hostel
                               </Text>
-                              <Text style={styles.subTitleText}>Apply Leave for Hostel Students</Text>
+                              <Text style={styles.subTitleText}>Hostel Details</Text>
                             </TouchableOpacity>
                           }
-                        </View>
-                      }
                     </View>
                   </ScrollView>
                   <LinearGradient
@@ -1408,7 +1435,7 @@ const StudentHome = () => {
                           <Text
                             style={styles.titleText}
                           >
-                            Calulator
+                            Calculator
                           </Text>
                           <Text style={styles.subTitleText}>Bus Service Details</Text>
                         </TouchableOpacity>
@@ -1518,7 +1545,7 @@ const StudentHome = () => {
                       <Text
                         style={styles.titleText}
                       >
-                        Proxy
+                        Attendance
                       </Text>
                       <Text style={styles.subTitleText}>Bus Service Details</Text>
                     </TouchableOpacity>

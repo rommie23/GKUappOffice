@@ -244,8 +244,9 @@ const BusPassDetails = () => {
                             <View style={{ alignContent: 'flex-start' }}>
                                 <Text style={styles.smallTxt}>Route : {passData?.data?.[0]['route']}</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 16, fontWeight: '500' }}><Text style={[styles.smallTxt, { color: colors.uniBlue }]}>Seat No: </Text>{passData?.data?.[0]['spot']}</Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '500' }}><Text style={[styles.smallTxt, { color: colors.uniBlue }]}>Spot: </Text>{passData?.data?.[0]['spot']}</Text>
                                 </View>
+                                <Text style={[styles.smallTxt,{color:colors.uniRed}]}>Expiry : {passData?.data?.[0]['expiryDate'].split("T")[0].split("-").reverse().join("-")}</Text>
                                 <Text style={{ fontSize: 14, alignSelf: 'center', marginTop: 10 }}>Scan to verify Bus Pass</Text>
                             </View>
                         </View>

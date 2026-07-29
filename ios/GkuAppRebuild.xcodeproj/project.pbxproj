@@ -12,6 +12,7 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		DE621F582ECC4256007AD0E8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DE621F572ECC4256007AD0E8 /* GoogleService-Info.plist */; };
+		DEC0BA352FE10EAC008E8FBD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEC0BA342FE10EAC008E8FBD /* Assets.xcassets */; };
 		DEDEF3752EF16B7600B9D3C4 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = DEDEF3732EF0012A00B9D3C4 /* main.jsbundle */; };
 		F7F3CFCA2E9135EC969F95AD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
@@ -69,6 +70,7 @@
 		DEB3D1B12ED04CDD00F25F34 /* RazorpayStandard.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = RazorpayStandard.xcframework; path = "Pods/razorpay-pod/Pod/RazorpayStandard.xcframework"; sourceTree = "<group>"; };
 		DEB3D1B32ED04CE300F25F34 /* react_native_razorpay.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = react_native_razorpay.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBAF2AB2ECC297A00DBABCA /* GkuAppRebuild.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = GkuAppRebuild.entitlements; path = GkuAppRebuild/GkuAppRebuild.entitlements; sourceTree = "<group>"; };
+		DEC0BA342FE10EAC008E8FBD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DEDEF3732EF0012A00B9D3C4 /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F5D3041B1C054AB9899C8C62 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = MaterialCommunityIcons.ttf; path = Fonts/MaterialCommunityIcons.ttf; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				DEC0BA342FE10EAC008E8FBD /* Assets.xcassets */,
 				DE5BAD9E2E8B938400193309 /* Fonts */,
 				13B07FAE1A68108700A75B9A /* GkuAppRebuild */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -271,6 +274,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				DE621F582ECC4256007AD0E8 /* GoogleService-Info.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				DEC0BA352FE10EAC008E8FBD /* Assets.xcassets in Resources */,
 				F7F3CFCA2E9135EC969F95AD /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,7 +401,7 @@
 				CODE_SIGN_ENTITLEMENTS = GkuAppRebuild/GkuAppRebuild.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 9BMJQNCSMG;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
@@ -409,7 +413,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27;
+				MARKETING_VERSION = 1.33;
 				NEW_SETTING1 = "";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -436,7 +440,7 @@
 				CODE_SIGN_ENTITLEMENTS = GkuAppRebuild/GkuAppRebuild.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 9BMJQNCSMG;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				INFOPLIST_FILE = GkuAppRebuild/Info.plist;
@@ -446,7 +450,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27;
+				MARKETING_VERSION = 1.33;
 				NEW_SETTING = "";
 				NEW_SETTING1 = "";
 				OTHER_LDFLAGS = (

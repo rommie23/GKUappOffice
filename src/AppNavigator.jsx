@@ -94,10 +94,15 @@ import GrievanceAttachmentView from './StudentSide/screens/grievance/GrievanceAt
 import AdmitCard from './StudentSide/screens/examination/AdmitCards'
 import EachAdmitCard from './StudentSide/screens/examination/EachAdmitCard'
 // import VerifyModal from './StaffSide/components/VerifyModal'
-import StaffTimeTable from './StaffSide/Screens/StaffTimeTable'
-import StaffWeeklyTimeTable from './StaffSide/Screens/StaffWeeklyTimeTable'
-import MarkAttendance from './StaffSide/Screens/MarkAttendance'
-import MarkLectureAttendance from './StaffSide/Screens/MarkLectureAttendance'
+
+// Time Table / Student Attendance
+import StaffTimeTable from './StaffSide/StudentAttendance/StaffTimeTable'
+import StaffWeeklyTimeTable from './StaffSide/StudentAttendance/StaffWeeklyTimeTable'
+import MarkAttendance from './StaffSide/StudentAttendance/MarkAttendance'
+import MarkLectureAttendance from './StaffSide/StudentAttendance/MarkLectureAttendance'
+import AdjustmentRequests from './StaffSide/StudentAttendance/AdjustmentRequests'
+
+
 import PendingAdmitCardData from './StudentSide/screens/examination/PendingAdmitCardData'
 import MyCertificates from './StudentSide/screens/myCertificates/MyCertificates'
 import CertificateViewer from './StudentSide/screens/myCertificates/CertificateViewer'
@@ -142,7 +147,23 @@ import NotificationDisplay from './StaffSide/Screens/NotificationDisplay'
 import BusPassDetails from './StudentSide/screens/BusService/BusPassDetails'
 import BusFeePay from './StudentSide/screens/BusService/BusFeePay'
 import { ActivityIndicator } from 'react-native-paper'
-import VisitorsList from './StaffSide/Visitor/VisitorsList'
+import EasyPayScreen from './StudentSide/screens/fees/EasyPayScreen'
+import AdmissionsDashboard from './StaffSide/Admissions/AdmissionsDashboard'
+import StudentMovementRequests from './StaffSide/Hostel/StudentMovementRequests'
+import StudentLeaveRequests from './StaffSide/Hostel/StudentLeaveRequests'
+import EditableLectures from './StaffSide/StudentAttendance/EditableLectures'
+import UpdateLectureAttendance from './StaffSide/StudentAttendance/UpdateLectureAttendance'
+
+// Hostel
+import HostelWarden from './StaffSide/Hostel/HostelWarden'
+import HostelRoomCheck from './StaffSide/Hostel/HostelRoomCheck'
+import HostelDetails from './StudentSide/screens/hostel/HostelDetails'
+import StudentMovement from './StudentSide/screens/hostel/StudentMovement'
+// Gate Security
+import VisitorsList from './StaffSide/GeteSecurity/VisitorsList'
+import GateSecurity from './StaffSide/GeteSecurity/GateSecurity'
+import StudentMovementCheck from './StaffSide/GeteSecurity/StudentMovementCheck'
+import StudentLeaveCheck from './StaffSide/GeteSecurity/StudentLeaveCheck'
 import { BASE_URL } from '@env';
 
 
@@ -339,6 +360,9 @@ const AppNavigator = () => {
                   </Stack.Screen>
                   <Stack.Screen name='DateSheet' component={DateSheet} options={{ headerShown: true, title: 'All Date Sheets' }} />
                   <Stack.Screen name='EachDateSheet' component={EachDateSheet} options={{ headerShown: true, title: 'Date Sheet' }} />
+                  <Stack.Screen name='EasyPayScreen' component={EasyPayScreen} options={{ headerShown: true, title: 'Pay Now' }} />
+                  <Stack.Screen name='HostelDetails' component={HostelDetails} options={{ headerShown: true, title: 'Hostel' }} />
+                  <Stack.Screen name='StudentMovement' component={StudentMovement} options={{ headerShown: true, title: 'Apply Movement' }} />
               {/* <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: 'Notifications' }}/>
               <Stack.Screen name='StudentNoticeBoard' component={StudentNoticeBoard} options={{ headerShown: true, title: 'Notice Board'}} />
               <Stack.Screen name='MyService' component={MyService} options={{ headerShown: true, title: 'MyService'}} />
@@ -373,6 +397,7 @@ const AppNavigator = () => {
                   <Stack.Screen name='TrackMovement' component={TrackMovement} options={{ headerShown: true, title: 'Track Movement' }} />
                   <Stack.Screen name='MarkAttendance' component={MarkAttendance} options={{ headerShown: true, title: "Mark Attendance" }} />
                   <Stack.Screen name='MarkLectureAttendance' component={MarkLectureAttendance} options={{ headerShown: true, title: "Mark Lecture Attendance" }} />
+                  <Stack.Screen name='AdjustmentRequests' component={AdjustmentRequests} options={{ headerShown: true, title: "Adjustments" }} />
                   <Stack.Screen name='MovmentRegister' component={MovmentRegister} options={{ headerShown: true, title: 'Movment Register' }} />
                   <Stack.Screen name='EachLeaveForward' component={EachLeaveForward} options={{ headerShown: true, title: "Leave Confirmation" }} />
                   <Stack.Screen name='ComplaintsMainScreen' component={ComplaintsMainScreen} options={{ headerShown: true, title: "Complaints" }} />
@@ -400,6 +425,16 @@ const AppNavigator = () => {
                   <Stack.Screen name='NotificationDisplay' component={NotificationDisplay} options={{ headerShown: true, title: "Notification View" }} />
                   <Stack.Screen name='SubmitReportScreen' component={SubmitReportScreen} options={{ headerShown: true, title: ' Upload Report' }} />
                   <Stack.Screen name='VisitorsList' component={VisitorsList} options={{ headerShown: true, title: 'Visitors' }} />
+                  <Stack.Screen name='AdmissionsDashboard' component={AdmissionsDashboard} options={{ headerShown: true, title: 'Admissions' }} />
+                  <Stack.Screen name='HostelWarden' component={HostelWarden} options={{ headerShown: true, title: 'Hostel' }} />
+                  <Stack.Screen name='StudentMovementRequests' component={StudentMovementRequests} options={{ headerShown: true, title: 'Movements' }} />
+                  <Stack.Screen name='StudentLeaveRequests' component={StudentLeaveRequests} options={{ headerShown: true, title: 'Leaves' }} />
+                  <Stack.Screen name='HostelRoomCheck' component={HostelRoomCheck} options={{ headerShown: true, title: 'Room Check' }} />
+                  <Stack.Screen name='GateSecurity' component={GateSecurity} options={{ headerShown: true, title: 'Gate Security' }} />
+                  <Stack.Screen name='StudentMovementCheck' component={StudentMovementCheck} options={{ headerShown: true, title: 'Check Movement' }} />
+                  <Stack.Screen name='StudentLeaveCheck' component={StudentLeaveCheck} options={{ headerShown: true, title: 'Check Leave' }} />
+                  <Stack.Screen name='EditableLectures' component={EditableLectures} options={{ headerShown: true, title: 'Edit Attendance' }} />
+                  <Stack.Screen name='UpdateLectureAttendance' component={UpdateLectureAttendance} options={{ headerShown: true, title: 'Update Attendance' }} />
 
                   {/* <Stack.Screen name='AllChats' component={AllChats} options={{ headerShown: true, title: "Chats"}} />
               <Stack.Screen name='ChatScreen' component={ChatScreen} options={{ headerShown: false, title: "Chat"}} />

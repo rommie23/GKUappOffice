@@ -13,6 +13,7 @@ const screenHeight = Dimensions.get('window').height;
 const StaffTimeTable = () => {
     const [isloading, setIsLoading] = useState(false)
     const [lectures, setLectures] = useState([])
+    const [specialLectures, setSpecialLectures] = useState([])
     const [refreshing, setRefreshing] = useState(false);
 
     const navigation = useNavigation()
@@ -28,12 +29,13 @@ const StaffTimeTable = () => {
             }
             })
             const DailyLecturesDataDetail = await dailyLectures.json()
-            console.log('Lecture Data is ::::::',DailyLecturesDataDetail['data']);
+            // console.log(DailyLecturesDataDetail['data']);
+            
             if (DailyLecturesDataDetail['data'].length > 0) {
                 setLectures(DailyLecturesDataDetail['data']);
             }
             else{
-                errorModel(ALERT_TYPE.WARNING,"No Data Found", `No Time Table for You`)
+                inModel(ALERT_TYPE.WARNING,"No Lecture", `No Regular Lecture for You`)
             }
             setIsLoading(false)
         } catch (error) {
@@ -41,8 +43,32 @@ const StaffTimeTable = () => {
             errorModel(ALERT_TYPE.DANGER, "OOPS!! Something went wrong", `Please try again after sometime`)
         }
     }
+    
+    const adjustedLectures = async () => {
+        const session = await EncryptedStorage.getItem("user_session")
+        try {
+            setIsLoading(true)
+            const res = await fetch(BASE_URL + '/Staff/adjustedLecturesList', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session}`
+            }
+            })
+            const adjusted = await res.json()
+            console.log('adjustedLectures Data is ::::::',adjusted['data']);
+            if (adjusted.flag == 1) {
+                setSpecialLectures(adjusted['data']);
+            }
+            setIsLoading(false)
+        } catch (error) {
+            console.log('inout api error ::', error);
+            errorModel(ALERT_TYPE.DANGER, "OOPS!! Something went wrong", `Please try again after sometime`)
+        }
+    }
+
     useEffect(()=>{
-        dailyLecturesData()
+        dailyLecturesData();
+        adjustedLectures();
     },[])
 
     const onRefresh = useCallback(() => {
@@ -60,6 +86,14 @@ const StaffTimeTable = () => {
             textBody: message,
             button: 'close',
             onHide : ()=>navigation.goBack()
+            })
+      }
+      const inModel = (type, title, message)=> {
+        Dialog.show({
+            type: type ,
+            title: title,
+            textBody: message,
+            button: 'close',
             })
       }
   return (
@@ -86,9 +120,42 @@ const StaffTimeTable = () => {
             ))
           } 
           </View>
+          
+          <Text style={styles.headerText}>Adjusted Lectures List</Text>
+          <View style={styles.cardOuter}>
+          {
+            isloading ? <ActivityIndicator/> : 
+            specialLectures.length > 0 ? specialLectures.map((lecture, index) => (
+              <View key={index} style={styles.card}>
+                {
+                  lecture.AdjustmentType == 'Merge' ?
+                  <View style={{ rowGap: 4 }}>
+                    <Text style={[styles.cardTxt, {color:colors.uniRed}]}>Lecture Number : {lecture["OriginalLecture"]}</Text>
+                    <Text style={styles.cardTxt}>Subect Name : {`${lecture["OriginalSubjectName"]} (${lecture["OriginalSubject"]})`}</Text>
+                    <Text style={styles.smallTxt}>Course : {lecture["OriginalCourse"]}</Text>
+                    <Text style={styles.smallTxt}>College : {lecture["CollegeName"]}</Text>
+                    <Text style={styles.smallTxt}>{`Semester - ${lecture['OriginalSemester']} Batch: ${lecture['OriginalBatch']}`}</Text>
+                  </View> :
+                  <View style={{ rowGap: 4 }}>
+                    <Text style={[styles.cardTxt, {color:colors.uniRed}]}>Lecture Number : {lecture["OriginalLecture"]}</Text>
+                    <Text style={styles.cardTxt}>Subect Name : {`${lecture["OriginalSubjectName"]} (${lecture["OriginalSubject"]})`}</Text>
+                    <Text style={styles.smallTxt}>Course : {lecture["OriginalCourse"]}</Text>
+                    <Text style={styles.smallTxt}>College : {lecture["CollegeName"]}</Text>
+                    <Text style={styles.smallTxt}>{`Semester - ${lecture['OriginalSemester']} Batch: ${lecture['OriginalBatch']}`}</Text>
+                  </View>
+
+                }
+              </View>
+            ))
+            : <Text>No data Found</Text>
+          } 
+          </View>
         </ScrollView>
+          <TouchableOpacity style={{backgroundColor:colors.uniBlue, width:'100%', paddingVertical:8, alignSelf:'flex-start', marginBottom:8, alignItems:'center'}} onPress={()=> navigation.navigate('AdjustmentRequests')}>
+                <Text style={{color:'white', fontWeight:'600'}}>Lecture Adjustment Requests</Text>
+            </TouchableOpacity>
           <TouchableOpacity style={{backgroundColor:colors.uniRed, width:'100%', paddingVertical:8, alignSelf:'flex-start', marginBottom:8, alignItems:'center'}} onPress={()=> navigation.navigate('StaffWeeklyTimeTable')}>
-                <Text style={{color:'white'}}>Weekly Time Table</Text>
+                <Text style={{color:'white', fontWeight:'600'}}>Weekly Time Table</Text>
             </TouchableOpacity>
         </AlertNotificationRoot>
   )
@@ -97,15 +164,12 @@ const StaffTimeTable = () => {
 export default StaffTimeTable
 
 const styles = StyleSheet.create({
-  mainTable: {
-    backgroundColor: 'white',
-  },
-  headerTable: {
-    backgroundColor: colors.uniBlue,
-  },
   headerText: {
-    color: 'white',
-    fontSize: 16
+    color: colors.uniBlue,
+    fontSize: 16,
+    fontWeight:'600',
+    alignSelf:'center',
+    marginTop:12
   },
   cardOuter: {
     width:screenWidth,

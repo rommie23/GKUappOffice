@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet, Dimensions, Alert, ScrollView, TextInput, SafeAreaView, TouchableOpacity, Modal, Button } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import MaterialCommunityIcons  from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ALERT_TYPE, Dialog, AlertNotificationRoot} from 'react-native-alert-notification';
@@ -60,7 +60,7 @@ const FeePayment = () => {
               }
             })
             const feeTypeDetailsData = await feeTypeDetails.json();
-            console.log(feeTypeDetailsData);
+            // console.log(feeTypeDetailsData);
             
             let feeTypeArray = feeTypeDetailsData['data'].map((item) => {
                 return { key: item['Head'], value: item['Head'] }
@@ -73,6 +73,15 @@ const FeePayment = () => {
             setIsLoading(false)
             errorModel(ALERT_TYPE.DANGER,"Oops!!!", `Something went wrong.`)
           }
+        }
+      }
+      const handleFeeTypeChange = (val)=>{
+        if (val === 'Bus Fee'){
+          navigation.pop();
+          navigation.navigate('BusPassDetails');
+        }
+        else{
+          setSelectedFeeType(val)
         }
       }
 
@@ -97,7 +106,7 @@ const FeePayment = () => {
                     
                     <Text style={{color:'#666666', marginTop:10}}>Fee Type<Text style={{color:'red'}}>*</Text></Text>
                     <SelectList boxStyles={{ padding: 10, width: "100%" }}
-                        setSelected={(val) => setSelectedFeeType(val)}
+                        setSelected={handleFeeTypeChange}
                         fontFamily='time'
                         data={typesOfFees}
                         arrowicon={<FontAwesome5Icon name="chevron-down" size={12} color={'black'} style={{ marginTop: 4, marginLeft: 16 }} />}

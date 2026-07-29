@@ -3,16 +3,30 @@ import { View, StyleSheet, Text, StatusBar, Image, ScrollView } from 'react-nati
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import { BASE_URL, IMAGE_URL } from '@env';
+import colors from '../../colors';
 
 export default function ScanqrScreen() {
   const device = useCameraDevice('back');
   const [hasPermission, setHasPermission] = useState(false);
   const [scannedValue, setScannedValue] = useState(null);
   const [student, setStudent] = useState({})
+  const [busDetails, setBusDetails] = useState({})
+  const [hostelDetails, setHostelDetails] = useState({})
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const ImageUrl = `${IMAGE_URL}Images/Students/`;
 
+  const floorMap = {
+    0: "Ground Floor",
+    1: "1st Floor",
+    2: "2nd Floor",
+    3: "3rd Floor",
+    4: "4th Floor",
+    5: "5th Floor",
+    6: "6th Floor",
+    7: "7th Floor",
+    8: "8th Floor",
+  };
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
@@ -29,21 +43,21 @@ export default function ScanqrScreen() {
       ) {
         return;
       }
-      let stId ;
+      let stId;
       console.log("upeerValue", codes);
-      
+
       if (codes[0].value.length > 15) {
         stId = codes[0].value.split("=")[1];
-      }else{
+      } else {
         stId = codes[0].value.trim();
       }
 
-        console.log('Scanned Value:', stId);
-        setScanned(true);
-        setScannedValue(stId);
+      console.log('Scanned Value:', stId);
+      setScanned(true);
+      setScannedValue(stId);
 
-        // API CALL
-        await getStudentData(stId);
+      // API CALL
+      await getStudentData(stId);
     },
   });
 
@@ -77,6 +91,8 @@ export default function ScanqrScreen() {
       console.log("studentDataScan::::", data);
 
       setStudent(data['studentData'])
+      setBusDetails(data['busPassData'])
+      setHostelDetails(data['hostelData'])
 
     } catch (err) {
       console.log(err);
@@ -95,14 +111,14 @@ export default function ScanqrScreen() {
 
   return (
     <ScrollView>
-    <View style={styles.container}>
+      <View style={styles.container}>
 
-      <Text style={styles.heading}>
-        Scan Student ID
-      </Text>
+        <Text style={styles.heading}>
+          Scan Student ID
+        </Text>
 
-      {/* Camera Box */}
-      <View style={styles.cameraContainer}>
+        {/* Camera Box */}
+        <View style={styles.cameraContainer}>
         <Camera
           style={styles.camera}
           device={device}
@@ -111,45 +127,76 @@ export default function ScanqrScreen() {
         />
       </View>
 
-      {/* Student Card */}
-      {student && (
-        <View style={styles.card}>
+        {/* Student Card */}
+        {student && (
+          <View style={styles.card}>
 
-          {/* Top Image */}
-          <Image
-            source={{ uri: ImageUrl + student.Image }}
-            style={styles.image}
-          />
+            {/* Top Image */}
+            <Image
+              source={{ uri: ImageUrl + student.Image }}
+              style={styles.image}
+            />
 
-          {/* Details */}
-          <View style={styles.detailsContainer}>
+            {/* Details */}
+            <View style={styles.detailsContainer}>
 
-            <Text style={styles.name}>
-              {student.StudentName}
-            </Text>
+              <Text style={styles.name}>
+                {student.StudentName}
+              </Text>
 
-            <Text style={styles.detail}>
-              Uni Roll No: {student.UniRollNo}
-            </Text>
+              <Text style={styles.detail}>
+                Uni Roll No: {student.UniRollNo}
+              </Text>
 
-            <Text style={styles.detail}>
-              Class Roll No: {student.ClassRollNo}
-            </Text>
+              <Text style={styles.detail}>
+                Class Roll No: {student.ClassRollNo}
+              </Text>
 
-            <Text style={styles.detail}>
-              Course: {student.Course}
-            </Text>
+              <Text style={styles.detail}>
+                Course: {student.Course}
+              </Text>
 
-            <Text style={styles.detail}>
-              College: {student.CollegeName}
-            </Text>
+              <Text style={styles.detail}>
+                College: {student.CollegeName}
+              </Text>
+
+            </View>
 
           </View>
+        )}
+        {
+          busDetails && (
+            <View style={styles.card}>
+              <View style={styles.detailsContainer}>
 
-        </View>
-      )}
+                <Text style={styles.name}>Transport Details</Text>
+                <Text style={styles.detail}>Pass Number: {busDetails.SerialNo}</Text>
+                <Text style={styles.detail}>Route: {busDetails.route}</Text>
+                <Text style={styles.detail}>Spot: {busDetails.spot}</Text>
+                <Text style={styles.detail}>Session: {busDetails.session}</Text>
+                <Text style={[styles.detail, { color: colors.rejected }]}>Expiry: {busDetails.expiryDate?.split("T")[0].split("-").reverse().join("-")}</Text>
+              </View>
+            </View>
+          )
+        }
 
-    </View>
+        {
+          hostelDetails && (
+            <View style={styles.card}>
+              <View style={styles.detailsContainer}>
+
+                <Text style={styles.name}>Hostel Details</Text>
+                <Text style={styles.detail}>Hostel Name: {hostelDetails?.HostelName}</Text>
+                <Text style={styles.detail}>Floor/Room: {floorMap[hostelDetails?.Floor]}/{hostelDetails?.RoomNo}</Text>
+                <Text style={[styles.detail]}>Allotment Date: {hostelDetails?.AllotmentDate?.split("T")[0].split("-").reverse().join("-")}</Text>
+                <Text style={styles.detail}>Warden: {hostelDetails?.WardenName}({hostelDetails?.WardenID})</Text>
+                <Text style={styles.detail}>Warnden Contact: {hostelDetails?.ContactNo}</Text>
+              </View>
+            </View>
+          )
+        }
+
+      </View>
     </ScrollView>
   );
 }
@@ -197,43 +244,43 @@ const styles = StyleSheet.create({
   },
 
   card: {
-  width: '92%',
-  backgroundColor: '#fff',
-  marginTop: 20,
-  borderRadius: 25,
-  paddingVertical: 16,
-  paddingHorizontal: 20,
-  alignItems: 'center',
-  elevation: 5,
-},
+    width: '92%',
+    backgroundColor: '#fff',
+    marginTop: 20,
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    elevation: 5,
+  },
 
-image: {
-  width: 125,
-  height: 125,
-  borderRadius: 10,
-  marginBottom: 10,
-  backgroundColor: '#f2f2f2',
-},
+  image: {
+    width: 125,
+    height: 125,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#f2f2f2',
+  },
 
-detailsContainer: {
-  width: '100%',
-},
+  detailsContainer: {
+    width: '100%',
+  },
 
-name: {
-  fontSize: 18,
-  fontWeight: '700',
-  color: '#111',
-  textAlign: 'center',
-  marginBottom: 10,
-},
+  name: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
 
-detail: {
-  fontSize: 15,
-  color: '#555',
-  marginBottom: 10,
-  borderBottomWidth: 0.5,
-  borderBottomColor: '#ddd',
-  paddingBottom: 8,
-},
+  detail: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 10,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#ddd',
+    paddingBottom: 8,
+  },
 
 })

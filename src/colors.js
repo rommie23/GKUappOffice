@@ -15,5 +15,8 @@ export default colors ={
     solidGreen :["#34D399", "#059669"],
     solidBlue :["#60A5FA", "#2563EB"],
     solidPurple: ["#A78BFA", "#7C3AED"],
-    solidOrange:["#FDBA74", "#EA580C"]
+    solidOrange:["#FDBA74", "#EA580C"],
+    pending: '#F8CB62',
+    approved: '#43A047',
+    rejected: '#E53935',
 }

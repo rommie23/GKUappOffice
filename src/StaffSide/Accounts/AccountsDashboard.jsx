@@ -125,7 +125,7 @@ const AccountsDashboard = () => {
                                         />
                                     </View>
                                     <View style={{backgroundColor:colors.uniBlue, width:'35%'}}>
-                                        <Text style={[styles.textSmall]}>From Date :</Text>
+                                        <Text style={[styles.textSmall]}>To Date :</Text>
                                         <Pressable onPress={() => showEndDatePicker()} 
                                         // style={{backgroundColor:colors.uniBlue, paddingHorizontal:12, paddingVertical:12, borderRadius:8}}
                                         >

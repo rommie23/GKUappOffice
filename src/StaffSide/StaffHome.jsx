@@ -26,6 +26,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Feather from 'react-native-vector-icons/Feather';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import EventBanner from '../commonComponent/EventBanner';
+import ordinal from '../commonComponent/Utilities/ordinal.js';
 
 
 
@@ -66,6 +68,7 @@ const StaffHome = () => {
   const [birthdayTab, setBirthdayTab] = useState(false)
   const [workAnniversaryTab, setWorkAnniversaryTab] = useState(false)
   const [alertsData, setAlertsData] = useState(false)
+  const [facilitiesData, setFacilitiesData] = useState(false)
   const navigation = useNavigation()
 
   // const errorHandler= ()=>{
@@ -143,7 +146,7 @@ const StaffHome = () => {
     workStart.setHours(9, 0, 0, 0);
 
     const workEnd = new Date();
-    workEnd.setHours(17, 0, 0, 0);
+    workEnd.setHours(16, 20, 0, 0);
 
     // Clamp based on current time only (ignore checkout)
     if (now < workStart) return 0;
@@ -357,7 +360,7 @@ const StaffHome = () => {
   // ///////// BIRTHDAY FUNCTION END ///////////////
 
 
-  const getAlerts = async()=>{
+  const getAlerts = async () => {
     const session = await EncryptedStorage.getItem("user_session")
     if (session != null) {
       try {
@@ -369,7 +372,7 @@ const StaffHome = () => {
         })
         const alertsDataD = await alerts.json()
         // console.log("getAlertsHomeD::",alertsDataD);
-        
+
         setAlertsData(alertsDataD)
       } catch (error) {
         console.log('Error fetching getAlerts:', error);
@@ -378,6 +381,29 @@ const StaffHome = () => {
       }
     }
   }
+
+  ////// Facilities taken by staff ////////
+  const getfacilitiesData = async () => {
+    const session = await EncryptedStorage.getItem("user_session")
+    if (session != null) {
+      try {
+        const response = await fetch(BASE_URL + '/staff/staffFacilities', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session}`
+          }
+        })
+        const data = await response.json()
+        console.log("getfacilitiesData::", data);
+
+        setFacilitiesData(data)
+      } catch (error) {
+        console.log('Error fetching getfacilitiesData:', error);
+        errorModel(ALERT_TYPE.DANGER, "Oops!!!", `Something went wrong.`)
+      }
+    }
+  }
+
 
 
   const checkSession = async () => {
@@ -396,7 +422,7 @@ const StaffHome = () => {
         // console.log(studentDetailsData['data'][0])
 
         console.log(`${studentDetailsData['data'][0]['ProfileLock'] == 1} || ${studentDetailsData['data'][0]['ForceLogout'] == 1}`);
-        
+
         if (studentDetailsData['data'][0]['ProfileLock'] == 1 ||
           studentDetailsData['data'][0]['ForceLogout'] == 1
         ) {
@@ -466,7 +492,7 @@ const StaffHome = () => {
     acceptNoDuesTab();
     noDuesTabPermission();
     getAlerts();
-
+    getfacilitiesData();
   }, [])
 
   useEffect(() => {
@@ -493,8 +519,8 @@ const StaffHome = () => {
     }, 2000);
   }, []);
 
-  var inoutText = "In Time: ";
-  var outtimeText = "Out Time: ";
+  // var inoutText = "In Time: ";
+  // var outtimeText = "Out Time: ";
 
   // onPressHandler = () => {
   //   // Your onPress logic goes here
@@ -576,7 +602,7 @@ const StaffHome = () => {
       }
     }
   }
-  
+
   const checkAdmissionAuth = async () => {
     setIsLoading(true)
     const session = await EncryptedStorage.getItem("user_session")
@@ -592,7 +618,7 @@ const StaffHome = () => {
         })
         const admissionPerm = await AdmissionPerm.json()
         console.log("admissionPerm::::", admissionPerm);
-        
+
         setAdmissionBoardPermission(admissionPerm['flag'])
         setIsLoading(false)
       } catch (error) {
@@ -601,7 +627,7 @@ const StaffHome = () => {
       }
     }
   }
-  
+
   const specialTabPermissions = async () => {
     setIsLoading(true)
     const session = await EncryptedStorage.getItem("user_session")
@@ -616,7 +642,7 @@ const StaffHome = () => {
         })
         const pageSecPerm = await SecurityPerm.json()
         console.log(pageSecPerm);
-        
+
         setSpecialTabPermission(pageSecPerm)
         setIsLoading(false)
       } catch (error) {
@@ -661,7 +687,7 @@ const StaffHome = () => {
             'Content-Type': 'application/json'
           }
         })
-        const showTabPerm = await tabPerm.json()        
+        const showTabPerm = await tabPerm.json()
         setNoDueApproveTab(showTabPerm['result']['total'])
         setIsLoading(false)
       } catch (error) {
@@ -704,9 +730,10 @@ const StaffHome = () => {
       button: 'close',
     })
   }
+
   return (
     <AlertNotificationRoot>
-      <View style={{ height: '100%', backgroundColor:'#fff' }}>
+      <View style={{ height: '100%', backgroundColor: '#fff' }}>
         {isLoading ?
           (
             <ActivityIndicator size="large" />
@@ -727,18 +754,19 @@ const StaffHome = () => {
                   <BirthdayCard name={staffProfileData['Name']} type={2} years={workAnniversaryTab.age} />
                   <BirthdaySparkle show={true} />
                 </>
-              )}             
+              )}
               {
                 alertsData.count > 0 &&
                 <AlertBanner alerts={alertsData.alerts} />
               }
+              <EventBanner />
               {/* greeting and attendance card */}
               <View style={styles.greetContainer}>
                 <Text style={styles.greeting}>
                   Hello, {staffProfileData['Name']}
                 </Text>
 
-                <TouchableOpacity style={styles.attendanceBox} onPress={()=>navigation.navigate('Calendar')}>
+                <TouchableOpacity style={styles.attendanceBox} onPress={() => navigation.navigate('Calendar')}>
                   <View style={styles.row}>
                     <View style={styles.inRow}>
                       <View style={styles.greenDot} />
@@ -830,6 +858,102 @@ const StaffHome = () => {
                     </TouchableOpacity>
                   }
                 </View>
+                {dashboardTabs?.Dashboard_fc?.[16]?.['IsVisible'] == 1 &&
+                  dashboardTabs?.Dashboard_fc?.[16]?.['ElementName'] == 'StaffFacilities' && facilitiesData?.success &&
+                  (
+                    <TouchableOpacity
+                      style={[
+                        styles.actionCard,
+                        {
+                          marginTop: 16,
+                          width: '100%',
+                          alignItems: 'flex-start',
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          rowGap: 14,
+                        },
+                      ]}>
+
+                      {facilitiesData?.transport?.hasData && (
+                        <View style={{ flexDirection: 'row', columnGap: 12, width: '100%' }}>
+                          <LinearGradient
+                            colors={colors.solidOrange}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={[styles.iconBg,{height: 38,width: 38,borderRadius: 11}]}>
+                            <MaterialCommunityIcons
+                              name="bus"
+                              color="white"
+                              size={24}
+                            />
+                          </LinearGradient>
+
+                          <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                fontWeight: '600',
+                                color: '#374151',
+                              }}
+                              numberOfLines={1}>
+                              {facilitiesData?.transport?.data?.[0]?.RouteName}
+                            </Text>
+
+                            <Text
+                              style={{
+                                color: '#6B7280', fontSize: 13, fontWeight: '400',
+                              }}
+                              numberOfLines={1}>
+                              {`Spot: ${facilitiesData?.transport?.data?.[0]?.Spot}  •  Rent: ${facilitiesData?.transport?.data?.[0]?.Amount}`}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+
+                      {facilitiesData?.residence?.hasData && (
+                        <View style={{ flexDirection: 'row', columnGap: 12, width: '100%' }}>
+                          <LinearGradient
+                            colors={colors.solidPurple}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={[
+                              styles.iconBg,
+                              { height: 38, width: 38, borderRadius: 11},
+                            ]}>
+                            <MaterialCommunityIcons
+                              name="home"
+                              color="white"
+                              size={24}
+                            />
+                          </LinearGradient>
+
+                          <View style={{ flex: 1, justifyContent: 'center' }}>
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                fontWeight: '600',
+                                color: '#374151',
+                              }}
+                              numberOfLines={1}>
+                              {facilitiesData?.residence?.data?.[0]?.BuildingName}
+                            </Text>
+
+                            <Text
+                              style={{
+                                color: '#6B7280',
+                                fontSize: 13,
+                                fontWeight: '400',
+                              }}
+                              numberOfLines={1}>
+                              {`Floor: ${ordinal(
+                                facilitiesData?.residence?.data?.[0]?.Floor,
+                              )} • Room: ${facilitiesData?.residence?.data?.[0]?.RoomNo} • Rent: ${facilitiesData?.residence?.data?.[0]?.Amount}`}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  )}
               </View>
 
               {/* No Dues tab */}
@@ -912,107 +1036,107 @@ const StaffHome = () => {
               <View style={{ marginTop: 16 }}>
                 <Text style={{ width: '88%', marginHorizontal: 'auto', fontSize: 16, fontWeight: '600' }}>Quick Access</Text>
                 <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContainer}
-                >
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContainer}
+                  >
 
-                  {/* Accounts */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[6]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[6]['ElementName'] == 'AccountDashboard' && AccPermission == 1 &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('AccountsDashboard')}>
-                      <LinearGradient
-                        colors={colors.solidOrange}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="wallet-outline" size={22} color="#fff" />
-                      </LinearGradient>
+                    {/* Accounts */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[6]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[6]['ElementName'] == 'AccountDashboard' && AccPermission == 1 &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('AccountsDashboard')}>
+                        <LinearGradient
+                          colors={colors.solidOrange}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="wallet-outline" size={22} color="#fff" />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Accounts</Text>
-                        <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
-                  {/* Admissions */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[13]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[13]['ElementName'] == 'AdmissionDashboard' && admissionBoardPermission == 1 &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('AdmissionsDashboard')}>
-                      <LinearGradient
-                        colors={colors.solidGreen}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialIcons name="groups-2" size={22} color="#fff" />
-                      </LinearGradient>
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Accounts</Text>
+                          <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
+                    {/* Admissions */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[13]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[13]['ElementName'] == 'AdmissionDashboard' && admissionBoardPermission == 1 &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('AdmissionsDashboard')}>
+                        <LinearGradient
+                          colors={colors.solidGreen}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialIcons name="groups-2" size={22} color="#fff" />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Admissions</Text>
-                        <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Admissions</Text>
+                          <Text style={styles.subtitle}>{`Till: ${CurrentDay.split(',')[0].split(' ').reverse().join('-')}`}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* Books Issued */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[2]['ElementName'] == 'BooksIssued' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => { navigation.navigate('LibraryBooks') }}>
-                      <LinearGradient
-                        colors={colors.solidBlue}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="book-outline" size={22} color="#fff" />
-                      </LinearGradient>
+                    {/* Books Issued */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[2]['ElementName'] == 'BooksIssued' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => { navigation.navigate('LibraryBooks') }}>
+                        <LinearGradient
+                          colors={colors.solidBlue}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="book-outline" size={22} color="#fff" />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Library</Text>
-                        <Text style={styles.subtitle}>{`${gettTotalBooks} Active`}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Library</Text>
+                          <Text style={styles.subtitle}>{`${gettTotalBooks} Active`}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* Time Table */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[4]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[4]['ElementName'] == 'TimeTable' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('StaffTimeTable')}>
-                      <LinearGradient
-                        colors={colors.solidPurple}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="calendar-clock" color="#fff" size={20} />
-                      </LinearGradient>
+                    {/* Time Table */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[4]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[4]['ElementName'] == 'TimeTable' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('StaffTimeTable')}>
+                        <LinearGradient
+                          colors={colors.solidPurple}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="calendar-clock" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Time Table</Text>
-                        <Text style={styles.subtitle}>{CurrentDay.split(',')[0].split(' ').reverse().join('-')} ({CurrentDayName})</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Time Table</Text>
+                          <Text style={styles.subtitle}>{CurrentDay.split(',')[0].split(' ').reverse().join('-')} ({CurrentDayName})</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* Mark Attendance */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[5]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[5]['ElementName'] == 'MarkAttendance' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('MarkAttendance')}>
-                      <LinearGradient
-                        colors={colors.solidGreen}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="human-greeting-variant" color="#fff" size={20} />
-                      </LinearGradient>
+                    {/* Mark Attendance */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[5]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[5]['ElementName'] == 'MarkAttendance' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('MarkAttendance')}>
+                        <LinearGradient
+                          colors={colors.solidGreen}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="human-greeting-variant" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Mark Attendance</Text>
-                        <Text style={styles.subtitle}>{CurrentDay.split(',')[0].split(' ').reverse().join('-')} ({CurrentDayName})</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
-                  
-                  {/* {
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Mark Attendance</Text>
+                          <Text style={styles.subtitle}>{CurrentDay.split(',')[0].split(' ').reverse().join('-')} ({CurrentDayName})</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
+
+                    {/* {
                     dashboardTabs?.Dashboard_fc?.[11]?.['IsVisible'] == 0 && dashboardTabs?.Dashboard_fc[11]['ElementName'] == 'VisitorsList' &&
                     <TouchableOpacity style={styles.card}
                       onPress={() => navigation.navigate('VisitorsList')}>
@@ -1029,83 +1153,83 @@ const StaffHome = () => {
                       </View>
                     </TouchableOpacity>
                   } */}
-                  {/* STUDENT ID CARD SCAN */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[12]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[12]['ElementName'] == 'StudentIDCardCheck' && specialTabPermission.scanPermission &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('ScanqrScreen')}>
-                      <LinearGradient
-                        colors={colors.solidPurple}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="qrcode-scan" color="#fff" size={20} />
-                      </LinearGradient>
+                    {/* STUDENT ID CARD SCAN */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[12]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[12]['ElementName'] == 'StudentIDCardCheck' && specialTabPermission.scanPermission &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('ScanqrScreen')}>
+                        <LinearGradient
+                          colors={colors.solidPurple}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="qrcode-scan" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Scan Smart Card</Text>
-                        <Text style={styles.subtitle}>Scan Student ID Card</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Scan Smart Card</Text>
+                          <Text style={styles.subtitle}>Scan Student ID Card</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* Hostel Tab for Warden */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[14]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[14]['ElementName'] == 'HostelWarden' && specialTabPermission.hostelPermission &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('HostelWarden')}>
-                      <LinearGradient
-                        colors={colors.solidOrange}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="office-building-outline" color="#fff" size={20} />
-                      </LinearGradient>
+                    {/* Hostel Tab for Warden */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[14]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[14]['ElementName'] == 'HostelWarden' && specialTabPermission.hostelPermission &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('HostelWarden')}>
+                        <LinearGradient
+                          colors={colors.solidOrange}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="office-building-outline" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Hostel</Text>
-                        <Text style={styles.subtitle}>Hostel Warden</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
-                  {/* Gate Security and Passes */}
-                  {
-                    dashboardTabs?.Dashboard_fc?.[15]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[15]['ElementName'] == 'GateSecurity' && specialTabPermission.gatePermission &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('GateSecurity')}>
-                      <LinearGradient
-                        colors={colors.solidPurple}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="security" color="#fff" size={20} />
-                      </LinearGradient>
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Hostel</Text>
+                          <Text style={styles.subtitle}>Hostel Warden</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
+                    {/* Gate Security and Passes */}
+                    {
+                      dashboardTabs?.Dashboard_fc?.[15]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[15]['ElementName'] == 'GateSecurity' && specialTabPermission.gatePermission &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('GateSecurity')}>
+                        <LinearGradient
+                          colors={colors.solidPurple}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="security" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Gate Security</Text>
-                        <Text style={styles.subtitle}>Gate Check in/out</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Gate Security</Text>
+                          <Text style={styles.subtitle}>Gate Check in/out</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
 
-                  {/* Approve No dues */}
-                  {
-                    dashboardTabs.Dashboard_fc?.[10]?.['IsVisible'] == 1 && dashboardTabs.Dashboard_fc[10]['ElementName'] == 'NoDues' && noDueApproveTab == 1 &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('ApproveNodues')}>
-                      <LinearGradient
-                        colors={colors.solidGreen}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialIcons name="edit-document" color="#fff" size={20} />
-                      </LinearGradient>
+                    {/* Approve No dues */}
+                    {
+                      dashboardTabs.Dashboard_fc?.[10]?.['IsVisible'] == 1 && dashboardTabs.Dashboard_fc[10]['ElementName'] == 'NoDues' && noDueApproveTab == 1 &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('ApproveNodues')}>
+                        <LinearGradient
+                          colors={colors.solidGreen}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialIcons name="edit-document" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>No Dues</Text>
-                        <Text style={styles.subtitle}>Approve No Dues</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>No Dues</Text>
+                          <Text style={styles.subtitle}>Approve No Dues</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                </ScrollView>
+                  </ScrollView>
                   <LinearGradient
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -1121,7 +1245,7 @@ const StaffHome = () => {
                     }}
                     pointerEvents="none"
                   />
-                  </View>
+                </View>
               </View>
 
 
@@ -1131,69 +1255,69 @@ const StaffHome = () => {
               <View style={{ marginTop: 16 }}>
                 <Text style={{ width: '88%', marginHorizontal: 'auto', fontSize: 16, fontWeight: '600' }}>Leave</Text>
                 <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContainer}
-                >
-                  {/* Apply Leaves */}
-                  {
-                    dashboardTabs?.Leave_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[2]?.ElementName === 'ApplyLeave' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={imageStatus == 2 ? () => { profileAlert() } : () => navigation.navigate('ApplyLeaveForm')}>
-                      <LinearGradient
-                        colors={colors.solidPurple}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <Feather name="user-plus" color="#fff" size={20} />
-                      </LinearGradient>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContainer}
+                  >
+                    {/* Apply Leaves */}
+                    {
+                      dashboardTabs?.Leave_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[2]?.ElementName === 'ApplyLeave' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={imageStatus == 2 ? () => { profileAlert() } : () => navigation.navigate('ApplyLeaveForm')}>
+                        <LinearGradient
+                          colors={colors.solidPurple}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <Feather name="user-plus" color="#fff" size={20} />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Apply Leave</Text>
-                        <Text style={styles.subtitle}>Apply Leave</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Apply Leave</Text>
+                          <Text style={styles.subtitle}>Apply Leave</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* My Leaves */}
-                  {
-                    dashboardTabs?.Leave_fc?.[0]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[0]?.ElementName === 'MyLeaves' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => { navigation.navigate('MyLeaves') }}>
-                      <LinearGradient
-                        colors={colors.solidBlue}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <FontAwesome6 name='person-walking-dashed-line-arrow-right' size={20} color="#fff" />
-                      </LinearGradient>
+                    {/* My Leaves */}
+                    {
+                      dashboardTabs?.Leave_fc?.[0]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[0]?.ElementName === 'MyLeaves' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => { navigation.navigate('MyLeaves') }}>
+                        <LinearGradient
+                          colors={colors.solidBlue}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <FontAwesome6 name='person-walking-dashed-line-arrow-right' size={20} color="#fff" />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>My Leaves</Text>
-                        <Text style={styles.subtitle}>Applied Leaves</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>My Leaves</Text>
+                          <Text style={styles.subtitle}>Applied Leaves</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
 
-                  {/* Approve Leave */}
-                  {
-                    dashboardTabs?.Leave_fc?.[1]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[1]?.ElementName === 'SupervisorLeaves' &&
-                    <TouchableOpacity style={styles.card}
-                      onPress={() => navigation.navigate('SupervisorLeaves')}>
-                      <LinearGradient
-                        colors={colors.solidOrange}
-                        style={[styles.iconBg, { height: 30, width: 30 }]}
-                      >
-                        <MaterialCommunityIcons name="sitemap-outline" size={22} color="#fff" />
-                      </LinearGradient>
+                    {/* Approve Leave */}
+                    {
+                      dashboardTabs?.Leave_fc?.[1]?.['IsVisible'] == 1 && dashboardTabs?.Leave_fc?.[1]?.ElementName === 'SupervisorLeaves' &&
+                      <TouchableOpacity style={styles.card}
+                        onPress={() => navigation.navigate('SupervisorLeaves')}>
+                        <LinearGradient
+                          colors={colors.solidOrange}
+                          style={[styles.iconBg, { height: 30, width: 30 }]}
+                        >
+                          <MaterialCommunityIcons name="sitemap-outline" size={22} color="#fff" />
+                        </LinearGradient>
 
-                      <View style={styles.textContainer}>
-                        <Text style={styles.title}>Approve Leaves</Text>
-                        <Text style={styles.subtitle}>Sanction Leaves</Text>
-                      </View>
-                    </TouchableOpacity>
-                  }
-                </ScrollView>
-                <LinearGradient
+                        <View style={styles.textContainer}>
+                          <Text style={styles.title}>Approve Leaves</Text>
+                          <Text style={styles.subtitle}>Sanction Leaves</Text>
+                        </View>
+                      </TouchableOpacity>
+                    }
+                  </ScrollView>
+                  <LinearGradient
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
@@ -1208,7 +1332,7 @@ const StaffHome = () => {
                     }}
                     pointerEvents="none"
                   />
-                  </View>
+                </View>
               </View>
 
 
@@ -1282,9 +1406,9 @@ const StaffHome = () => {
                 </View>
               </View>
 
-              {/* ///////////////////////////// Complaint related tabs ////////////////////////// */}
+              {/* ////////////// Complaint related tabs /////////// */}
               {
-                dashboardTabs?.Dashboard_fc?.[3]?.['IsVisible'] == 0 && dashboardTabs?.Dashboard_fc[3]['ElementName'] == 'LaunchComplaint' &&
+                dashboardTabs?.Dashboard_fc?.[3]?.['IsVisible'] == 1 && dashboardTabs?.Dashboard_fc[3]['ElementName'] == 'LaunchComplaint' &&
                 <View style={{ marginTop: 16 }}>
                   <Text style={{ width: '88%', marginHorizontal: 'auto', fontSize: 16, fontWeight: '600' }}>Complains</Text>
                   <ScrollView
@@ -1294,14 +1418,14 @@ const StaffHome = () => {
                   >
                     {/* Apply Complaint */}
                     {
-                      dashboardTabs?.LaunchComplaint_fc?.[1]?.['IsVisible'] == 0 && dashboardTabs?.LaunchComplaint_fc?.[1]?.ElementName === 'LaunchComplaint' &&
+                      dashboardTabs?.LaunchComplaint_fc?.[1]?.['IsVisible'] == 1 && dashboardTabs?.LaunchComplaint_fc?.[1]?.ElementName === 'LaunchComplaint' &&
                       <TouchableOpacity style={styles.card}
                         onPress={() => navigation.navigate('LaunchCompaint')}>
                         <LinearGradient
-                          colors={colors.solidOrange}
+                          colors={colors.solidPurple}
                           style={[styles.iconBg, { height: 30, width: 30 }]}
                         >
-                          <FontAwesome6 name='person-circle-plus' size={22} color="#fff" />
+                          <MaterialIcons name='add-task' size={22} color="#fff" />
                         </LinearGradient>
 
                         <View style={styles.textContainer}>
@@ -1319,7 +1443,7 @@ const StaffHome = () => {
                           colors={colors.solidGreen}
                           style={[styles.iconBg, { height: 30, width: 30 }]}
                         >
-                          <FontAwesome6 name='person-walking-arrow-loop-left' color="#fff" size={20} />
+                          <MaterialIcons name='task-alt' color="#fff" size={20} />
                         </LinearGradient>
 
                         <View style={styles.textContainer}>
@@ -1331,16 +1455,14 @@ const StaffHome = () => {
 
                     {/* Supervisor Complaint */}
                     {
-                      dashboardTabs?.LaunchComplaint_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.LaunchComplaint_fc?.[2]?.ElementName === 'SupervisorTasks' &&
-
-                      // tabsData?.[2]?.['IsVisible'] == 1 && tabsData?.[2]?.ElementName === 'SupervisorTasks' && flag == 1 &&
+                      dashboardTabs?.LaunchComplaint_fc?.[2]?.['IsVisible'] == 1 && dashboardTabs?.LaunchComplaint_fc?.[2]?.ElementName === 'SupervisorTasks' && specialTabPermission.taskSupervisorPermission &&
                       <TouchableOpacity style={styles.card}
                         onPress={() => { navigation.navigate('SupervisorTasks') }}>
                         <LinearGradient
                           colors={colors.solidBlue}
                           style={[styles.iconBg, { height: 30, width: 30 }]}
                         >
-                          <MaterialCommunityIcons name="sitemap-outline" size={20} color="#fff" />
+                          <MaterialIcons name="format-list-bulleted" size={20} color="#fff" />
                         </LinearGradient>
 
                         <View style={styles.textContainer}>
@@ -1351,17 +1473,14 @@ const StaffHome = () => {
                     }
                     {/* Accept/Complete Complaint */}
                     {
-                      dashboardTabs?.LaunchComplaint_fc?.[4]?.['IsVisible'] == 1 && dashboardTabs?.LaunchComplaint_fc?.[4]?.ElementName === 'AcceptOrCompleteTask' &&
-
-                      // tabsData?.[4]?.['IsVisible'] == 1 && tabsData?.[4]?.ElementName === 'AcceptOrCompleteTask' && flag2 == 1 &&
-
+                      dashboardTabs?.LaunchComplaint_fc?.[4]?.['IsVisible'] == 1 && dashboardTabs?.LaunchComplaint_fc?.[4]?.ElementName === 'AcceptOrCompleteTask' && specialTabPermission.workersTasksPermission &&
                       <TouchableOpacity style={styles.card}
                         onPress={() => { navigation.navigate('AcceptAndCompleteComplaint') }}>
                         <LinearGradient
-                          colors={colors.solidBlue}
+                          colors={colors.solidOrange}
                           style={[styles.iconBg, { height: 30, width: 30 }]}
                         >
-                          <MaterialCommunityIcons name="sitemap-outline" size={20} color="#fff" />
+                          <MaterialIcons name="checklist-rtl" size={20} color="#fff" />
                         </LinearGradient>
 
                         <View style={styles.textContainer}>
@@ -2310,7 +2429,7 @@ const styles = StyleSheet.create({
     // shadowRadius: 10,
     // shadowOffset: { width: 0, height: 4 },
     // elevation: 4,
-    paddingRight:40
+    paddingRight: 40
   },
   card: {
     flexDirection: "row",

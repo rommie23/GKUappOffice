@@ -109,6 +109,10 @@ import CertificateViewer from './StudentSide/screens/myCertificates/CertificateV
 import Notice from './StudentSide/screens/notices/Notice'
 import StudentLeaves from './StudentSide/screens/hostel/StudentLeaves'
 import EachLeaveForward from './StaffSide/Leaves/SupervisorLeaves/EachLeaveForward'
+
+// student -- documnet request/return
+import OriginalDocumentReturn from './StudentSide/screens/ApplyDocuments/requestOriginalBack/OriginalDocumentReturn'
+import TrackReturnRequest from './StudentSide/screens/ApplyDocuments/requestOriginalBack/TrackReturnRequest'
 import ApplyForDocuments from './StudentSide/screens/ApplyDocuments/ApplyForDocuments'
 import ApplyDocumentsForm from './StudentSide/screens/ApplyDocuments/ApplyDocumentsForm'
 import TrackApplyDocument from './StudentSide/screens/ApplyDocuments/TrackApplyDocument'
@@ -165,6 +169,9 @@ import GateSecurity from './StaffSide/GeteSecurity/GateSecurity'
 import StudentMovementCheck from './StaffSide/GeteSecurity/StudentMovementCheck'
 import StudentLeaveCheck from './StaffSide/GeteSecurity/StudentLeaveCheck'
 import { BASE_URL } from '@env';
+
+//Placements
+import PlacementsForm from './StudentSide/screens/Placements/PlacementsForm'
 
 
 const Stack = createStackNavigator()
@@ -363,13 +370,17 @@ const AppNavigator = () => {
                   <Stack.Screen name='EasyPayScreen' component={EasyPayScreen} options={{ headerShown: true, title: 'Pay Now' }} />
                   <Stack.Screen name='HostelDetails' component={HostelDetails} options={{ headerShown: true, title: 'Hostel' }} />
                   <Stack.Screen name='StudentMovement' component={StudentMovement} options={{ headerShown: true, title: 'Apply Movement' }} />
+                  <Stack.Screen name='OriginalDocumentReturn' component={OriginalDocumentReturn} options={{ headerShown: true, title: 'Return Form' }} />
+                  <Stack.Screen name='TrackReturnRequest' component={TrackReturnRequest} options={{ headerShown: true, title: 'Return Requests' }} />
+                  <Stack.Screen name='PlacementsForm' component={PlacementsForm} options={{ headerShown: true, title: 'Placement Form' }} />
+                  <Stack.Screen name='OpenPDF' component={OpenPDF} options={{ headerShown: true, title: "View Document"}} /> 
               {/* <Stack.Screen name='StudentNotification' component={StudentNotification} options={{ headerShown: true, title: 'Notifications' }}/>
               <Stack.Screen name='StudentNoticeBoard' component={StudentNoticeBoard} options={{ headerShown: true, title: 'Notice Board'}} />
               <Stack.Screen name='MyService' component={MyService} options={{ headerShown: true, title: 'MyService'}} />
               <Stack.Screen name='PreRequisite' component={PreRequisite} options={{ headerShown: true, title: "Pre Requisite Course"}}/>
               <Stack.Screen name='OTPVerification' component={VerifyModal} options={{ headerShown: true, title: "OTP Verification"}}/>
               <Stack.Screen name='ConfirmDocumentPayment' component={ConfirmDocumentPayment} options={{ headerShown: true, title: "Confirm Payment"}}/>
-              <Stack.Screen name='OpenPDF' component={OpenPDF} options={{ headerShown: true, title: "View Document"}} /> */}
+              */}
                 </>
                 :
                 <>
@@ -435,7 +446,6 @@ const AppNavigator = () => {
                   <Stack.Screen name='StudentLeaveCheck' component={StudentLeaveCheck} options={{ headerShown: true, title: 'Check Leave' }} />
                   <Stack.Screen name='EditableLectures' component={EditableLectures} options={{ headerShown: true, title: 'Edit Attendance' }} />
                   <Stack.Screen name='UpdateLectureAttendance' component={UpdateLectureAttendance} options={{ headerShown: true, title: 'Update Attendance' }} />
-
                   {/* <Stack.Screen name='AllChats' component={AllChats} options={{ headerShown: true, title: "Chats"}} />
               <Stack.Screen name='ChatScreen' component={ChatScreen} options={{ headerShown: false, title: "Chat"}} />
               <Stack.Screen name='NewChat' component={NewChat} options={{ headerShown: true, title: "NewChat"}} /> */}

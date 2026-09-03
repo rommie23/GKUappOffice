@@ -271,8 +271,7 @@ const StudentLeaveCheck = () => {
                     item.DepatureTime == null && item.ArrivalTime == null ?
                       <TouchableOpacity style={styles.rejectBtn}
                         onPress={() => handleButtons(1, item.ID)}>
-                        <Text style={styles.buttonText}>
-                          Check Out Student
+                        <Text style={styles.buttonText}>Check Out Student
                         </Text>
                       </TouchableOpacity>
                       : item.DepatureTime != null && item.ArrivalTime == null ?
@@ -403,9 +402,9 @@ const styles = StyleSheet.create({
   },
 
   rejectBtn: {
-    width: '45%',
+    paddingHorizontal:16,
     backgroundColor: colors.uniRed,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -413,7 +412,7 @@ const styles = StyleSheet.create({
   },
 
   approveBtn: {
-    width: '45%',
+    paddingHorizontal:16,
     backgroundColor: '#2E7D32',
     paddingVertical: 10,
     borderRadius: 12,
@@ -425,7 +424,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     fontWeight: '700',
-    marginLeft: 8,
     fontSize: 15,
   },
   searchContainer: {

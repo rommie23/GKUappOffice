@@ -99,6 +99,17 @@ const FeePaymentConfirmation = ({ route }) => {
 
 	const confirmPayment2 = async () => {
 		setLoading(true);
+
+		console.log(`idno: ${data.data[0].IDNo},
+						firstname: ${data.data[0].StudentName},
+						email: ${data.data[0].EmailID},
+						phone: ${data.data[0].StudentMobileNo},
+						productinfo: ${feetype},
+						remarks: ${remarks},
+						amount: ${fees},
+						requestid: "-1",
+						semester: ${sem}`);
+
 		const session = await EncryptedStorage.getItem("user_session");
 		console.log(`token: Bearer confirmPayment2`);
 
@@ -125,6 +136,8 @@ const FeePaymentConfirmation = ({ route }) => {
 						},
 					}
 				);
+
+				console.log(`token: Bearer confirmPayment2 first API`);
 
 				let parsedData;
 				try {
@@ -166,16 +179,15 @@ const FeePaymentConfirmation = ({ route }) => {
 
 				RazorpayCheckout.open(options)
 					.then(async (data1) => {
-						console.log(`"idno": "${data.data[0].IDNo}",
-                            "firstname": "${data.data[0].StudentName}",
-                            "requestid": "-1",
-                            "semester": "${sem}",
-                            "remarks": "${remarks}",
-                            "razorpay_payment_id" : "${data1.razorpay_payment_id}",
-                            "razorpay_order_id" : "${data1.razorpay_order_id}",
-                            "razorpay_signature": "${data1.razorpay_signature}",`);
-
-
+						console.log(`
+							"idno": "${data.data[0].IDNo}",
+							"firstname": "${data.data[0].StudentName}",
+							"requestid": "-1",
+							"semester": "${sem}",
+							"remarks": "${remarks}",
+							"razorpay_payment_id" : "${data1.razorpay_payment_id}",
+							"razorpay_order_id" : "${data1.razorpay_order_id}",
+							"razorpay_signature": "${data1.razorpay_signature}",`);
 						// Payment success: send this to backend to verify
 						const response = await axios.post("https://payment.gku.ac.in/api/razorpay/payment-response-razorpay", {
 

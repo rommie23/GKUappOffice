@@ -33,8 +33,11 @@ const ForgotPassword = () => {
           setresult(data);
           if (data == '4') {
             submitModel(ALERT_TYPE.WARNING, "Oops!!!", `Kindly provide the right information. Email and Username does not match in database`)
-          } else {
-            errorModel(ALERT_TYPE.SUCCESS, "Success", `Email Successfully sent...`)
+          } else if(data == '5'){
+            submitModel(ALERT_TYPE.INFO, "Already Sent", `E-mail is already sent please try after 15 minutes from successful request`)
+          }
+          else {
+            errorModel(ALERT_TYPE.SUCCESS, "Success", `Email Sent Successfully, please check Spam folder too`)
           }
           // setShowModal(true); 
           setIsLoading(false)

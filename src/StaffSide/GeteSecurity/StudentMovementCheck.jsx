@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   },
 
   rejectBtn: {
-    width: '45%',
+    paddingHorizontal:16,
     backgroundColor: colors.uniRed,
     paddingVertical: 10,
     borderRadius: 12,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
 
   approveBtn: {
-    width: '45%',
+    paddingHorizontal:16,
     backgroundColor: '#2E7D32',
     paddingVertical: 10,
     borderRadius: 12,
@@ -423,7 +423,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     fontWeight: '700',
-    marginLeft: 8,
     fontSize: 15,
   },
   searchContainer: {

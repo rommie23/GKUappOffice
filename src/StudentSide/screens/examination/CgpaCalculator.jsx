@@ -252,6 +252,7 @@ import React, { useEffect, useState } from 'react';
 import { SelectList } from 'react-native-dropdown-select-list';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
+import colors from '../../../colors';
 
 const CgpaCalculator = () => {
   const [credits, setCredits] = useState([]);
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: '#111827',
+    backgroundColor: colors.uniBlue,
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',

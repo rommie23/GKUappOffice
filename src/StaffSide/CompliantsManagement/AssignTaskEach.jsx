@@ -12,6 +12,7 @@ import useConfirm from '../../customhooks/useConfirm';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { SelectList } from 'react-native-dropdown-select-list';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import moment from 'moment';
 
 
 const screenWidth = Dimensions.get("window").width
@@ -35,20 +36,20 @@ const AssignTaskEach = ({ route }) => {
 	const complains = async () => {
 		setLoading(true)
 		const session = await EncryptedStorage.getItem("user_session");
-		console.log("session::",session);
+		console.log("session::", session);
 		if (!session) return;
 		try {
-			const response = await axios.post(`${BASE_URL}/complain/eachTask`, 
+			const response = await axios.post(`${BASE_URL}/complain/eachTask`,
 				{ taskId },
 				{
-					headers:{
-						Authorization : `Bearer ${session}`
+					headers: {
+						Authorization: `Bearer ${session}`
 					}
 				}
 			)
 			const complainsData = response.data;
 			// console.log("each task data :", complainsData);
-			
+
 			setComplainData(complainsData)
 			console.log("AssignTaskEach allcomplains::", complainsData);
 			setLoading(false)
@@ -132,18 +133,16 @@ const AssignTaskEach = ({ route }) => {
 			async () => {
 				setLoading(true)
 				const session = await EncryptedStorage.getItem("user_session");
-				// console.log("session::",session);
-				
 				if (!session) return;
 				try {
-					const response = await axios.post(`${BASE_URL}/complain/assignTask`, 
-						{ 
+					const response = await axios.post(`${BASE_URL}/complain/assignTask`,
+						{
 							taskId, employeeId
 						},
 						{
-							headers:{
+							headers: {
 								Authorization: `Bearer ${session}`,
-                "Content-Type": "application/json",
+								"Content-Type": "application/json",
 							}
 						}
 					)
@@ -151,6 +150,7 @@ const AssignTaskEach = ({ route }) => {
 					console.log("assignTask Button:", assignData);
 					if (assignData.flag == 1) {
 						newModel(ALERT_TYPE.SUCCESS, "Complaint Assigned", assignData.message)
+						await notificationfunction(employeeId)
 					}
 				} catch (error) {
 					console.log(error);
@@ -159,6 +159,51 @@ const AssignTaskEach = ({ route }) => {
 				}
 			}
 		)
+	}
+
+	const notificationfunction = async (recipient) => {
+		const session = await EncryptedStorage.getItem("user_session");
+		if (!session) return;
+		const fetchWithTimeout = (url, options, timeout = 5000) => {
+			return Promise.race([
+				fetch(url, options),
+				new Promise((_, reject) =>
+					setTimeout(() => reject(new Error('Timeout')), timeout)
+				),
+			]);
+		};
+
+		try {
+			console.log("notificationfunction called", recipient);
+			const res = await fetchWithTimeout(`${BASE_URL}/notifiaction/sendDynamicNotifications`, {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${session}`,
+					Accept: "application/json",
+					'Content-Type': "application/json"
+				},
+				body: JSON.stringify({
+					receipients: [recipient],
+					notificationId: 16
+				})
+			});
+
+			const response = await res.json();
+			console.log("Notification API response:", response);
+
+			if (res.ok) {
+				console.warn("Notification Success");
+			} else {
+				console.warn("Notification failed but continuing...");
+			}
+
+		} catch (error) {
+			if (error.message === "Timeout") {
+				console.warn("Notification timeout — proceeding anyway.");
+			} else {
+				console.error("Notification error:", error);
+			}
+		}
 	}
 
 	const newModel = (type, title, message) => {
@@ -186,7 +231,7 @@ const AssignTaskEach = ({ route }) => {
 												{
 													complainData.map((item, i) => (
 														<View key={i}>
-															<Text style={{ color: '#1b1b1b' }}>{`${item['name'].trim()} (${item['assignedTo']}) at ${convertUTCToIST(item['AssignedTime'])}`}</Text>
+															<Text style={{ color: '#1b1b1b' }}>{`${item['name'].trim()} at ${moment.utc(item.AssignedTime).format('DD MMM YYYY, hh:mm A')}`}</Text>
 														</View>
 													))
 												}
@@ -206,7 +251,7 @@ const AssignTaskEach = ({ route }) => {
 									<View style={styles.transaction}>
 										<View style={{ width: '50%' }}>
 											<Text style={[styles.textSmall]}>Complaint Date/Time</Text>
-											<Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(complainData[0]['CreatedDate'])}</Text>
+											<Text style={[styles.textStyle, styles.rowMiddle]}>{moment.utc(complainData[0]['CreatedDate']).format('DD MMM YYYY, hh:mm A')}</Text>
 										</View>
 										<View style={{ width: '30%' }}>
 											<Text style={[styles.textSmall]}>Category</Text>

@@ -86,9 +86,7 @@ const FeedbackFrom = () => {
             setLoading(false);
             return;
         }
-        
-        console.log("sendAnswerssendAnswers");
-        
+                
         const session = await EncryptedStorage.getItem("user_session")
         if (session != null) {
             try {

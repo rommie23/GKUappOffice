@@ -18,6 +18,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 
 import LinearGradient from 'react-native-linear-gradient';
 import Footer from './Footer';
+import DeviceInfo from 'react-native-device-info';
 
 const screenWidth = Dimensions.get('window').width
 const screenHeight = Dimensions.get('window').height
@@ -45,6 +46,10 @@ const PublicScreen = ({ navigation }) => {
     }, [])
   );
   console.log("BASE_URL :: ", BASE_URL);
+  const currentVersion = DeviceInfo.getVersion();
+
+  console.log({currentVersion});
+  
 
   const newModel = (type, title, message) => {
     Dialog.show({

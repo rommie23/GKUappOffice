@@ -11,6 +11,7 @@ import { launchCamera } from 'react-native-image-picker';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import moment from 'moment';
 
 const screenWidth = Dimensions.get("window").width
 const screenHeight = Dimensions.get("window").height
@@ -58,25 +59,25 @@ const CompleteTaskScreen = ({ route }) => {
   }, [])
 
   const requestCameraPermission = async () => {
-  if (Platform.OS !== 'android') return true;
+    if (Platform.OS !== 'android') return true;
 
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.CAMERA,
-      {
-        title: 'Camera Permission',
-        message: 'App needs camera permission',
-        buttonPositive: 'OK',
-        buttonNegative: 'Cancel',
-      }
-    );
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Camera Permission',
+          message: 'App needs camera permission',
+          buttonPositive: 'OK',
+          buttonNegative: 'Cancel',
+        }
+      );
 
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
-};
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
 
   const takePhoto = async () => {
 
@@ -217,7 +218,7 @@ const CompleteTaskScreen = ({ route }) => {
   //   );
   // };
 
-  const completeTask = async ()=>{
+  const completeTask = async () => {
     setLoading(true)
     const session = await EncryptedStorage.getItem("user_session");
     if (!session) return
@@ -228,28 +229,29 @@ const CompleteTaskScreen = ({ route }) => {
       if (photo) {
         console.log("photo:", photo);
         formData.append("photo", {
-          uri : photo.uri,
-          type : photo.type,
-          name : photo.fileName || 'photo.jpg',
+          uri: photo.uri,
+          type: photo.type,
+          name: photo.fileName || 'photo.jpg',
         });
         const response = await axios.post(
           `${BASE_URL}/complain/completeTask`, formData,
           {
-            headers:{
+            headers: {
               Authorization: `Bearer ${session}`,
               'Content-Type': 'multipart/form-data',
             }
           });
-          console.log("completeTask completeTask");
-          const responseData = response.data;
-          if (responseData.flag == 1){
-            newModel(ALERT_TYPE.SUCCESS, 'Success', 'Task Completed')
-          }
-          else{
-            newModel(ALERT_TYPE.DANGER, 'Failed', 'Task Completion Failed, Please try Again')
-          }
+        console.log("completeTask completeTask");
+        const responseData = response.data;
+        if (responseData.flag == 1) {
+          newModel(ALERT_TYPE.SUCCESS, 'Success', 'Task Completed')
+          await notificationfunction(complainData.CreatedBy)
+        }
+        else {
+          newModel(ALERT_TYPE.DANGER, 'Failed', 'Task Completion Failed, Please try Again')
+        }
       }
-      else{
+      else {
         newModel(ALERT_TYPE.INFO, 'Photo', 'Photo of work is required')
       }
     } catch (error) {
@@ -259,7 +261,7 @@ const CompleteTaskScreen = ({ route }) => {
       setLoading(false)
     }
   }
-  
+
 
   const confirmAndExecute = () => {
     Alert.alert(
@@ -283,6 +285,51 @@ const CompleteTaskScreen = ({ route }) => {
       { cancelable: false }
     );
   };
+
+  const notificationfunction = async (recipient) => {
+    console.log("notificationfunction called");
+    const session = await EncryptedStorage.getItem("user_session");
+    if (!session) return;
+    const fetchWithTimeout = (url, options, timeout = 5000) => {
+      return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), timeout)
+        ),
+      ]);
+    };
+
+    try {
+      const res = await fetchWithTimeout(`${BASE_URL}/notifiaction/sendDynamicNotifications`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session}`,
+          Accept: "application/json",
+          'Content-Type': "application/json"
+        },
+        body: JSON.stringify({
+          receipients: [recipient],
+          notificationId: 17
+        })
+      });
+
+      const response = await res.json();
+      console.log("Notification API response:", response);
+
+      if (res.ok) {
+        console.warn("Notification Success");
+      } else {
+        console.warn("Notification failed but continuing...");
+      }
+
+    } catch (error) {
+      if (error.message === "Timeout") {
+        console.warn("Notification timeout — proceeding anyway.");
+      } else {
+        console.error("Notification error:", error);
+      }
+    }
+  }
 
   const newModel = (type, title, message) => {
     Dialog.show({
@@ -311,7 +358,7 @@ const CompleteTaskScreen = ({ route }) => {
               <View style={styles.transaction}>
                 <View style={{ width: '50%' }}>
                   <Text style={[styles.textSmall]}>Start Date/Time</Text>
-                  <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToISTComplaintUse(complainData['StartTime'])}</Text>
+                  <Text style={[styles.textStyle, styles.rowMiddle]}>{moment.utc(complainData['StartTime']).format('DD MMM YYYY, hh:mm A')}</Text>
                 </View>
               </View>
               <View style={styles.transaction}>

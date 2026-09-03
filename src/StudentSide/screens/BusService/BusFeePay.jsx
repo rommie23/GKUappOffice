@@ -490,7 +490,7 @@ const BusFeePay = ({ route }) => {
                       style={[styles.button, { backgroundColor: colors.uniBlue }]}
                       onPress={() => confirmPayment3()}
                     >
-                      <Text style={styles.btnText}>Pay Now easy</Text>
+                      <Text style={styles.btnText}>Pay Now</Text>
                     </TouchableOpacity>
                   }
                 </View>

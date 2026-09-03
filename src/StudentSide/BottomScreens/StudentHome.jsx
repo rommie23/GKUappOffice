@@ -24,6 +24,9 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FeesAlert from '../components/feesRelated/FeesAlert'
+import EventBanner from '../../commonComponent/EventBanner'
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -228,7 +231,7 @@ const StudentHome = () => {
         }
         // console.log("FeedBackStatus::", studentDetailsData['data'][0]);
 
-        if (studentDetailsData['data'][0]['FeedBackStatus'] != '1' && studentDetailsData['data'][0]['CourseID'] != '188') {
+        if (tabsData?.Dashboard_st?.[12]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[12]?.ElementName === 'FeedbackForm' && studentDetailsData['data'][0]['FeedBackStatus'] != '1' && studentDetailsData['data'][0]['CourseID'] != '188' && studentDetailsData['data'][0]['Session'] !== '2026-27-A') {
           setIsLoading(false);
           navigation.reset({
             index: 0,
@@ -367,7 +370,7 @@ const StudentHome = () => {
     }
   }
 
-  const hostelTabShow=async()=>{
+  const hostelTabShow = async () => {
     setLoading(true)
     const session = await EncryptedStorage.getItem("user_session")
     if (session != null) {
@@ -379,11 +382,13 @@ const StudentHome = () => {
           },
         })
         const hostelFlagDetails = await hostelFlag.json()
+        console.log({ hostelFlagDetails });
+
         if (hostelFlagDetails.flag == 1) {
           setHostelTab(true)
           setHostelData(hostelFlagDetails.studentData)
         }
-        
+
       } catch (error) {
         console.log('Error fetching flags data:examination:', error)
         setLoading(false)
@@ -497,6 +502,7 @@ const StudentHome = () => {
                   <BirthdaySparkle show={true} />
                 </>
               )}
+              <EventBanner />
               {
                 feePending?.flag == 1 && (
                   <FeesAlert
@@ -511,7 +517,7 @@ const StudentHome = () => {
                 locations={[0, 0.5, 1]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                style={{ minWidth: '92%', width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
                 <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Student</Text>
                 <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
                   <ScrollView
@@ -591,9 +597,7 @@ const StudentHome = () => {
                               />
                             </MaskedView>
                           </View>
-                          <Text
-                            style={styles.titleText}
-                          >
+                          <Text style={styles.titleText}>
                             Notices
                           </Text>
                           <Text style={styles.subTitleText}>Check Notice Board</Text>
@@ -680,6 +684,43 @@ const StudentHome = () => {
                           <Text style={styles.subTitleText}>Messages from Faculty</Text>
                         </TouchableOpacity>
                       }
+                      {tabsData?.Dashboard_st?.[11]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[11]?.ElementName === 'Placements' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { closeMenu(); navigation.navigate('PlacementsForm') }}>
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <MaterialIcons name="work-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Placements/Alumni
+                          </Text>
+                          <Text style={styles.subTitleText}>Alumni/Placements</Text>
+                        </TouchableOpacity>
+                      }
                     </View>
                   </ScrollView>
                   <LinearGradient
@@ -708,7 +749,7 @@ const StudentHome = () => {
                 locations={[0, 0.3, 1]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } }}>
+                style={{ minwidth: '92%', width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } }}>
                 <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Facilities</Text>
                 <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
                   <ScrollView
@@ -873,91 +914,84 @@ const StudentHome = () => {
                         </TouchableOpacity>
                       }
 
+                      {/* Electrity Bill */}
                       {
                         showElectricityTab &&
-                        <View style={{ width: '100%', alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', rowGap: 16, columnGap: 8, justifyContent: 'flex-start' }}>
-
-                          {/* Electrity Bill */}
-                          {tabsData?.Dashboard_st?.[5]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[5]?.ElementName === 'ElectrityBill' &&
-                            <TouchableOpacity
-                              activeOpacity={0.85}
-                              style={[styles.cardOuterShapeScroll]}
-                              onPress={() => { closeMenu(); navigation.navigate('StudentElectricityBill') }}
-                            >
-                              <View
-                                style={styles.iconOuterRing}
-                              >
-                                <MaskedView
-                                  style={{ flexDirection: 'row', height: 36, width: 36 }}
-                                  maskElement={
-                                    <View
-                                      style={{
-                                        backgroundColor: 'transparent',
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                      }}
-                                    >
-                                      <MaterialCommunityIcons name='lightbulb-on-outline' color={colors.uniBlue} size={30} />
-                                    </View>
-                                  }
+                        tabsData?.Dashboard_st?.[5]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[5]?.ElementName === 'ElectrityBill' &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={[styles.cardOuterShapeScroll]}
+                          onPress={() => { closeMenu(); navigation.navigate('StudentElectricityBill') }}
+                        >
+                          <View
+                            style={styles.iconOuterRing}
+                          >
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
                                 >
-                                  <LinearGradient
-                                    colors={[colors.uniRed, colors.uniBlue]}
-                                    style={{ flex: 1 }}
-                                  />
-                                </MaskedView>
-                              </View>
-                              <Text
-                                style={styles.titleText}
-                              >
-                                Electricity
-                              </Text>
-                              <Text style={styles.subTitleText}>Current Bill is : ₹ </Text>
-                            </TouchableOpacity>
-                          }
-                        </View>
+                                  <MaterialCommunityIcons name='lightbulb-on-outline' color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Electricity
+                          </Text>
+                          <Text style={styles.subTitleText}>Current Bill is : ₹ </Text>
+                        </TouchableOpacity>
                       }
                       {/* hostel */}
-                          {tabsData?.Dashboard_st?.[10]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[10]?.ElementName === 'Hostel' && hostelTab &&
-                            <TouchableOpacity
-                              activeOpacity={0.85}
-                              style={styles.cardOuterShapeScroll}
-                              onPress={() => { navigation.navigate('HostelDetails', {hostelData}) }}
-                              // onPress={() => { closeMenu(); navigation.navigate('StudentLeaves') }}
-                            >
-                              <View
-                                style={styles.iconOuterRing}
-                              >
-                                <MaskedView
-                                  style={{ flexDirection: 'row', height: 36, width: 36 }}
-                                  maskElement={
-                                    <View
-                                      style={{
-                                        backgroundColor: 'transparent',
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                      }}
-                                    >
-                                      <MaterialCommunityIcons name="office-building-outline" color={colors.uniBlue} size={30} />
-                                    </View>
-                                  }
+                      {tabsData?.Dashboard_st?.[10]?.['IsVisible'] == 1 && tabsData?.Dashboard_st?.[10]?.ElementName === 'Hostel' && hostelTab &&
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          style={styles.cardOuterShapeScroll}
+                          onPress={() => { navigation.navigate('HostelDetails', { hostelData }) }}
+                        >
+                          <View style={styles.iconOuterRing}>
+                            <MaskedView
+                              style={{ flexDirection: 'row', height: 36, width: 36 }}
+                              maskElement={
+                                <View
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
                                 >
-                                  <LinearGradient
-                                    colors={[colors.uniRed, colors.uniBlue]}
-                                    style={{ flex: 1 }}
-                                  />
-                                </MaskedView>
-                              </View>
-                              <Text
-                                style={styles.titleText}
-                              >
-                                Hostel
-                              </Text>
-                              <Text style={styles.subTitleText}>Hostel Details</Text>
-                            </TouchableOpacity>
-                          }
+                                  <MaterialCommunityIcons name="office-building-outline" color={colors.uniBlue} size={30} />
+                                </View>
+                              }
+                            >
+                              <LinearGradient
+                                colors={[colors.uniRed, colors.uniBlue]}
+                                style={{ flex: 1 }}
+                              />
+                            </MaskedView>
+                          </View>
+                          <Text
+                            style={styles.titleText}
+                          >
+                            Hostel
+                          </Text>
+                          <Text style={styles.subTitleText}>Hostel Details</Text>
+                        </TouchableOpacity>
+                      }
                     </View>
                   </ScrollView>
                   <LinearGradient
@@ -984,7 +1018,7 @@ const StudentHome = () => {
                 locations={[0, 0.3, 1]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: '96%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                style={{ minWidth: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
                 <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Fees</Text>
                 <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, justifyContent: 'flex-start' }}>
                   {
@@ -1116,7 +1150,7 @@ const StudentHome = () => {
                 locations={[0, 0.3, 1]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                style={{ minWidth: '92%', width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
                 <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Examination</Text>
                 <View style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
                   <ScrollView
@@ -1281,7 +1315,7 @@ const StudentHome = () => {
                           <Text style={styles.subTitleText}>Bus Service Details</Text>
                         </TouchableOpacity>
                       }
-                      
+
                       {
                         tabsData?.Examination_st?.[8]?.['IsVisible'] == 1 && tabsData?.Examination_st?.[8]?.ElementName === 'DateSheet' &&
                         <TouchableOpacity
@@ -1406,7 +1440,7 @@ const StudentHome = () => {
                         <TouchableOpacity
                           activeOpacity={0.85}
                           style={styles.cardOuterShapeScroll}
-                          onPress={() => { closeMenu(); navigation.navigate('CGPA Calculator') }}
+                          onPress={() => { navigation.navigate('CGPA Calculator') }}
                         >
                           <View
                             style={styles.iconOuterRing}
@@ -1468,7 +1502,7 @@ const StudentHome = () => {
                 locations={[0, 0.3, 1]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: '96%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
+                style={{ minWidth: '92%', width: '92%', alignSelf: 'center', marginVertical: 16, borderRadius: 16, elevation: 3, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, }}>
                 <Text style={{ left: 20, top: 10, color: colors.uniBlue, fontWeight: '500', fontSize: 16 }}>Academics</Text>
                 <View style={{ padding: 24, flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, justifyContent: 'flex-start' }}>
                   {

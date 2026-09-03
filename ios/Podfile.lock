@@ -2781,6 +2781,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - RNDeviceInfo (15.0.2):
+    - React-Core
   - RNFBApp (23.4.1):
     - Firebase/CoreOnly (= 12.4.0)
     - React-Core
@@ -3279,6 +3281,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNFS (from `../node_modules/react-native-fs`)
@@ -3490,6 +3493,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
+  RNDeviceInfo:
+    :path: "../node_modules/react-native-device-info"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBMessaging:
@@ -3619,6 +3624,7 @@ SPEC CHECKSUMS:
   ReactCommon: e9ab32f1d1482d207867b4fdd139361302b9dcc6
   RNCMaskedView: d707a83784c67099b54b37d056ababb2767ce15e
   RNDateTimePicker: 4417dfde0b39c1ce11439f47472b17aac91f0fde
+  RNDeviceInfo: 4c852998208b60dc192ae3529e5867817719ad1e
   RNFBApp: 4d2d631b593081c39565f67403f90b188c0f22f7
   RNFBMessaging: 50ae400edc5874bde8720104cdfc4b898be07479
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8

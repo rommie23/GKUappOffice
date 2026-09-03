@@ -41,8 +41,13 @@ const HostelRoomCheck = () => {
             return { key: item['BuildingID'], value: item['HostelName'] }
           })
           setHostelList(list);
-          setFloor('')
-          setRoom('')
+          setFloorList([]);
+          setFloor('');
+
+          setRoomList([]);
+          setRoom('');
+
+          setStudents([]);
         }
       } catch (error) {
         submitModel(ALERT_TYPE.DANGER, "Oops!!!", `Something went wrong !!`)
@@ -53,11 +58,23 @@ const HostelRoomCheck = () => {
   };
 
   const getFloorsList = async (hostelId) => {
-    setIsLoading(true)
-    const session = await EncryptedStorage.getItem("user_session")
+    // Clear dependent selections immediately
+    setFloor('');
+    setFloorList([]);
+
+    setRoom('');
+    setRoomList([]);
+
+    setStudents([]);
+
+    setIsLoading(true);
+
+    const session = await EncryptedStorage.getItem("user_session");
+
     if (session != null) {
       try {
-        const res = await axios.post(`${BASE_URL}/staff/floorList`,
+        const res = await axios.post(
+          `${BASE_URL}/staff/floorList`,
           {
             blockId: hostelId
           },
@@ -67,31 +84,46 @@ const HostelRoomCheck = () => {
               Accept: "application/json",
               'Content-Type': "application/json"
             }
-          })
-        // console.log(res.data);
+          }
+        );
 
         if (res.data.flag == 1) {
           const list = res.data.floorList.map((item) => {
-            return { key: item['key'], value: item['value'] }
-          })
+            return {
+              key: item['key'],
+              value: item['value']
+            };
+          });
+
           setFloorList(list);
           setHostel(hostelId);
-          setRoom('')
         }
       } catch (error) {
-        submitModel(ALERT_TYPE.DANGER, "Oops!!!", `Something went wrong !!`)
+        submitModel(
+          ALERT_TYPE.DANGER,
+          "Oops!!!",
+          `Something went wrong !!`
+        );
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
   };
 
   const getRoomsList = async (floorNo) => {
-    setIsLoading(true)
-    const session = await EncryptedStorage.getItem("user_session")
+    // Clear dependent values
+    setRoom('');
+    setRoomList([]);
+    setStudents([]);
+
+    setIsLoading(true);
+
+    const session = await EncryptedStorage.getItem("user_session");
+
     if (session != null) {
       try {
-        const res = await axios.post(`${BASE_URL}/staff/roomsList`,
+        const res = await axios.post(
+          `${BASE_URL}/staff/roomsList`,
           {
             blockId: hostel,
             floor: floorNo
@@ -102,32 +134,40 @@ const HostelRoomCheck = () => {
               Accept: "application/json",
               'Content-Type': "application/json"
             }
-          })
-        // console.log(res.data);
+          }
+        );
 
         if (res.data.flag == 1) {
           const list = res.data.roomList.map((item) => {
-            return { key: item['ID'], value: item['RoomNo'] }
-          })
+            return {
+              key: item['ID'],
+              value: item['RoomNo']
+            };
+          });
+
           setRoomList(list);
           setFloor(floorNo);
         }
       } catch (error) {
-        submitModel(ALERT_TYPE.DANGER, "Oops!!!", `Something went wrong !!`)
+        submitModel(
+          ALERT_TYPE.DANGER,
+          "Oops!!!",
+          `Something went wrong !!`
+        );
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
   };
 
   const getStudents = async () => {
-    console.log({hostel, floor, room});
-    
-    if (!hostel || !floor || !room) {
+    console.log({ hostel, floor, room });
+
+    if (!hostel || !floor ) {
       return submitModel(
         ALERT_TYPE.INFO,
         "Missing Fields",
-        "Please select Hostel, Floor and Room."
+        "Please select Hostel and Floor."
       );
     }
     setIsLoading(true)
@@ -138,6 +178,8 @@ const HostelRoomCheck = () => {
       try {
         const res = await axios.post(`${BASE_URL}/staff/studentsList`,
           {
+            hostel,
+            floor,
             locationId: room
           },
           {
@@ -147,8 +189,8 @@ const HostelRoomCheck = () => {
               'Content-Type': "application/json"
             }
           })
-        // console.log(res.data);
-        if (res.data.studentList.length === 0) {
+        console.log(res.data);
+        if (res.data.flag === 0) {
           return submitModel(ALERT_TYPE.INFO, "Oops!!!", res.data.message)
         } else {
           setStudents(res.data.studentList);
@@ -184,9 +226,9 @@ const HostelRoomCheck = () => {
 
         <View style={styles.filterCard}>
 
-          <Text style={styles.label}>Hostel<Text style={{color:'red'}}>*</Text></Text>
-
+          <Text style={styles.label}>Hostel<Text style={{ color: 'red' }}>*</Text></Text>
           <SelectList
+            key={`hostel-${hostelList.length}`}
             data={hostelList}
             setSelected={(val) => getFloorsList(val)}
             search={false}
@@ -199,9 +241,9 @@ const HostelRoomCheck = () => {
 
             <View style={styles.half}>
 
-              <Text style={styles.label}>Floor<Text style={{color:'red'}}>*</Text></Text>
-
+              <Text style={styles.label}>Floor<Text style={{ color: 'red' }}>*</Text></Text>
               <SelectList
+                key={`floor-${hostel}`}
                 data={floorList}
                 setSelected={(val) => getRoomsList(val)}
                 search={false}
@@ -214,9 +256,18 @@ const HostelRoomCheck = () => {
 
             <View style={styles.half}>
 
-              <Text style={styles.label}>Room<Text style={{color:'red'}}>*</Text></Text>
+              <Text style={styles.label}>Room</Text>
 
+              {/* <SelectList
+                data={roomList}
+                setSelected={setRoom}
+                search={false}
+                placeholder="Room"
+                boxStyles={styles.selectBox}
+                dropdownStyles={styles.dropdown}
+              /> */}
               <SelectList
+                key={`room-${floor}`}
                 data={roomList}
                 setSelected={setRoom}
                 search={false}

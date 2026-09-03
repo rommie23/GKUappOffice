@@ -4,6 +4,7 @@ import {StudentContextProvider} from './src/context/StudentContext'
 import AppNavigator from './src/AppNavigator'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import AppVersionGate from './src/commonComponent/ForceUpdate/AppVersionGate'
 
 function App() {
 
@@ -12,7 +13,9 @@ function App() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={{flex:1}}>
           <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-            <AppNavigator/>
+            <AppVersionGate>
+              <AppNavigator/>
+            </AppVersionGate>
           </SafeAreaView>
         </GestureHandlerRootView>
       </SafeAreaProvider>

@@ -9,6 +9,7 @@ import { ALERT_TYPE, Dialog, AlertNotificationRoot } from 'react-native-alert-no
 import { StudentContext } from '../../context/StudentContext';
 import axios from 'axios';
 import { convertUTCToIST } from '../../services/dateUTCToIST'
+import moment, { utc } from 'moment';
 
 const screenWidth = Dimensions.get("window").width
 const screenHeight = Dimensions.get("window").height
@@ -87,7 +88,7 @@ const AllComplaints = () => {
                   <View style={styles.transaction}>
                     <View style={{ width: '50%' }}>
                       <Text style={[styles.textSmall]}>Complaint Date/Time</Text>
-                      <Text style={[styles.textStyle, styles.rowMiddle]}>{convertUTCToIST(item['CreatedDate'])}</Text>
+                      <Text style={[styles.textStyle, styles.rowMiddle]}>{moment.utc(item['CreatedDate']).format('DD MMM YYYY, hh:mm A')}</Text>
                     </View>
                     <View style={{ width: '30%' }}>
                       <Text style={[styles.textSmall]}>Category</Text>
@@ -115,7 +116,7 @@ const AllComplaints = () => {
                   <View style={[styles.transaction]}>
                     <View style={{ width: '50%' }}>
                       <Text style={[styles.textSmall]}>Resolved At</Text>
-                      <Text style={[styles.textStyle]}>{item["CompletionTime"] ? convertUTCToIST(item["CompletionTime"]) : 'Not Resolved Yet'}</Text>
+                      <Text style={[styles.textStyle]}>{item["CompletionTime"] ? moment.utc(item["CompletionTime"]).format('DD MMM YYYY, hh:mm A') : 'Not Resolved Yet'}</Text>
                     </View>
                   </View>
                   {/* <View style={styles.transaction}>

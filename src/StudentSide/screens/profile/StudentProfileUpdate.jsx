@@ -63,7 +63,7 @@ const StudentProfileUpdate = () => {
                 const smartCardDetails = await smartCard.json()
                 console.log(smartCardDetails['data'][0]['status']);
 
-                smartCardDetails['data'][0]['status'] == 'Printed' ? setShowImageChangeButton(false) : null
+                smartCardDetails['data'][0]['status'] == 'Verified' ? setShowImageChangeButton(false) : null
                 setLoading(false)
                 console.log(data);
             }
